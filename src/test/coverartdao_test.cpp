@@ -107,8 +107,8 @@ TEST_F(CoverArtDAOTest, deleteUnusedCoverArts) {
     ASSERT_TRUE(coverId_4 > 0);
 
     //associating some covers to some tracks
-    trackDAO.updateCoverArt(trackId_1, coverId_1);
-    trackDAO.updateCoverArt(trackId_2, coverId_2);
+    trackDAO.updateCoverArt(trackId_1, coverLocation_1);//coverId_1);
+    trackDAO.updateCoverArt(trackId_2, coverLocation_2);//coverId_2);
 
     // removing all unused covers (3 and 4)
     m_CoverArtDAO.deleteUnusedCoverArts();
@@ -149,7 +149,7 @@ TEST_F(CoverArtDAOTest, getCoverArtInfo) {
     CoverArtDAO m_CoverArtDAO = m_pTrackCollection->getCoverArtDAO();
     QString coverLocation = "/getCoverArtInfo/cover.jpg";
     int coverId = m_CoverArtDAO.saveCoverLocation(coverLocation);
-    trackDAO.updateCoverArt(trackId, coverId);
+    trackDAO.updateCoverArt(trackId, coverLocation);//coverId);
 
     // getting cover art info from coverartdao
     CoverArtDAO::CoverArtInfo coverInfo;

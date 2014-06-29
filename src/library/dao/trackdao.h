@@ -113,7 +113,7 @@ class TrackDAO : public QObject, public virtual DAO {
     bool verifyRemainingTracks(volatile bool* pCancel);
 
     // it will update the Library.cover_art column in DB
-    bool updateCoverArt(int trackId, int coverId);
+    bool updateCoverArt(int trackId, QString coverLocation);
 
   signals:
     void trackDirty(int trackId);

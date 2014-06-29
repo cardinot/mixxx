@@ -142,6 +142,7 @@ void WTrackTableView::selectionChanged(const QItemSelection &selected,
             trackId = trackModel->getTrackId(idx);
         }
     }
+    qDebug() << coverLocation;
     emit(loadCoverArt(coverLocation, trackId));
     update();
 }

@@ -303,6 +303,8 @@ void BaseTrackCache::getTrackValueForColumn(TrackPointer pTrack,
         trackValue.setValue(static_cast<int>(pTrack->getKey()));
     } else if (fieldIndex(ColumnCache::COLUMN_LIBRARYTABLE_BPM_LOCK) == column) {
         trackValue.setValue(pTrack->hasBpmLock());
+    } else if (fieldIndex(ColumnCache::COLUMN_LIBRARYTABLE_COVERART) == column) {
+        trackValue.setValue(pTrack->getCoverLocation());
     }
 }
 

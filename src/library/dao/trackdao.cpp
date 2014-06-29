@@ -319,6 +319,9 @@ void TrackDAO::bindTrackToLibraryInsert(TrackInfoObject* pTrack, int trackLocati
     m_pQueryLibraryInsert->bindValue(":bpm_lock", pTrack->hasBpmLock()? 1 : 0);
     m_pQueryLibraryInsert->bindValue(":replaygain", pTrack->getReplayGain());
 
+    int coverArtId = m_coverArtDao.saveCoverLocation(pTrack->getCoverLocation());
+    m_pQueryLibraryInsert->bindValue(":cover_art", coverArtId);
+
     // We no longer store the wavesummary in the library table.
     m_pQueryLibraryInsert->bindValue(":wavesummaryhex", QVariant(QVariant::ByteArray));
 
@@ -842,7 +845,8 @@ TrackPointer TrackDAO::getTrackFromDB(const int id) const {
     QSqlQuery query(m_database);
 
     query.prepare(
-        "SELECT library.id, artist, title, album, album_artist, cover_art, year, genre, composer, "
+        "SELECT library.id, artist, title, album, album_artist, "
+        "cover_art.location AS cover_art, year, genre, composer, "
         "grouping, tracknumber, filetype, rating, key, track_locations.location as location, "
         "track_locations.filesize as filesize, comment, url, duration, bitrate, "
         "samplerate, cuepoint, bpm, replaygain, channels, "
@@ -852,6 +856,8 @@ TrackPointer TrackDAO::getTrackFromDB(const int id) const {
         "FROM Library "
         "INNER JOIN track_locations "
             "ON library.location = track_locations.id "
+        "LEFT JOIN cover_art "
+            "ON library.cover_art = cover_art.id "
         "WHERE library.id=" + QString("%1").arg(id)
     );
 
@@ -897,7 +903,7 @@ TrackPointer TrackDAO::getTrackFromDB(const int id) const {
             QString title = query.value(titleColumn).toString();
             QString album = query.value(albumColumn).toString();
             QString albumArtist = query.value(albumArtistColumn).toString();
-            int coverArtId = query.value(coverArtColumn).toInt();
+            QString coverLocation = query.value(coverArtColumn).toString();
             QString year = query.value(yearColumn).toString();
             QString genre = query.value(genreColumn).toString();
             QString composer = query.value(composerColumn).toString();
@@ -935,6 +941,7 @@ TrackPointer TrackDAO::getTrackFromDB(const int id) const {
             pTrack->setTitle(title);
             pTrack->setAlbum(album);
             pTrack->setAlbumArtist(albumArtist);
+            pTrack->setCoverLocation(coverLocation);
             pTrack->setYear(year);
             pTrack->setGenre(genre);
             pTrack->setComposer(composer);
@@ -1100,7 +1107,7 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
     query.prepare("UPDATE library "
                   "SET artist=:artist, "
                   "title=:title, album=:album, "
-                  "album_artist=:album_artist, "
+                  "album_artist=:album_artist, cover_art=:cover_art, "
                   "year=:year, genre=:genre, composer=:composer, "
                   "grouping=:grouping, filetype=:filetype, "
                   "tracknumber=:tracknumber, comment=:comment, url=:url, "
@@ -1118,6 +1125,7 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
     query.bindValue(":title", pTrack->getTitle());
     query.bindValue(":album", pTrack->getAlbum());
     query.bindValue(":album_artist", pTrack->getAlbumArtist());
+    query.bindValue(":cover_art", m_coverArtDao.getCoverArtId(pTrack->getCoverLocation()));
     query.bindValue(":year", pTrack->getYear());
     query.bindValue(":genre", pTrack->getGenre());
     query.bindValue(":composer", pTrack->getComposer());
@@ -1207,10 +1215,11 @@ void TrackDAO::updateTrack(TrackInfoObject* pTrack) {
 
 // we load and handle covers in CoverArtCache class and
 // it needs update this column for future cover loadings
-bool TrackDAO::updateCoverArt(int trackId, int coverId) {
-    if (trackId < 1 || coverId < 1) {
+bool TrackDAO::updateCoverArt(int trackId, QString coverLocation) {
+    if (trackId < 1 ) { //|| coverId < 1) {
         return false;
     }
+    /*
     QSqlQuery query(m_database);
     query.prepare("UPDATE library SET cover_art=:coverId WHERE id=:trackId");
     query.bindValue(":coverId", coverId);
@@ -1220,6 +1229,13 @@ bool TrackDAO::updateCoverArt(int trackId, int coverId) {
         LOG_FAILED_QUERY(query) << "couldn't update library.cover_art";
         return false;
     }
+    */
+
+// it needs more work... just for tests
+TrackPointer t = getTrackFromDB(trackId);
+t->setCoverLocation(coverLocation);
+
+    //emit(trackChanged(trackId));
     return true;
 }
 

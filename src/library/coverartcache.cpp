@@ -210,7 +210,7 @@ void CoverArtCache::imageFound() {
         coverLocation = res.coverLocation;
         // update DB
         int coverId = m_pCoverArtDAO->saveCoverLocation(coverLocation);
-        m_pTrackDAO->updateCoverArt(res.trackId, coverId);
+        m_pTrackDAO->updateCoverArt(res.trackId, coverLocation);
     }
 
     if (!res.img.isNull()) {
