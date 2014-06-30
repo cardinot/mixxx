@@ -14,7 +14,9 @@ class CoverArtCache : public QObject, public Singleton<CoverArtCache>
 {
     Q_OBJECT
   public:
-    void requestPixmap(int trackId, const QString& coverLocation = QString());
+    void requestPixmap(int trackId,
+                       QPixmap& pixmap,
+                       const QString& coverLocation = QString());
     void setCoverArtDAO(CoverArtDAO* coverdao);
     void setTrackDAO(TrackDAO* trackdao);
     QString getDefaultCoverLocation(int trackId);
@@ -24,7 +26,7 @@ class CoverArtCache : public QObject, public Singleton<CoverArtCache>
     void imageLoaded();
 
   signals:
-    void pixmapFound(int trackId, QPixmap pixmap);
+    void pixmapFound(int trackId);
 
   protected:
     CoverArtCache();
@@ -45,6 +47,7 @@ class CoverArtCache : public QObject, public Singleton<CoverArtCache>
     CoverArtDAO* m_pCoverArtDAO;
     TrackDAO* m_pTrackDAO;
     QSet<int> m_runningIds;
+    QPixmap* m_pixmap;
 
     QImage rescaleBigImage(QImage img);
     QImage searchEmbeddedCover(QString trackLocation);

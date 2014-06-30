@@ -22,7 +22,9 @@ void CoverArtCache::setTrackDAO(TrackDAO* trackdao) {
     m_pTrackDAO = trackdao;
 }
 
-void CoverArtCache::requestPixmap(int trackId, const QString& coverLocation) {
+void CoverArtCache::requestPixmap(int trackId,
+                                  QPixmap& pixmap,
+                                  const QString& coverLocation) {
     if (trackId < 1) {
         return;
     }
@@ -40,12 +42,12 @@ void CoverArtCache::requestPixmap(int trackId, const QString& coverLocation) {
     } else {
         cover = coverLocation;
     }
-    QPixmap pixmap;
-    if (QPixmapCache::find(cover, &pixmap)) {
-        emit(pixmapFound(trackId, pixmap));
+    if (QPixmapCache::find(cover, pixmap)) {
+        emit(pixmapFound(trackId));
         return;
     }
 
+    m_pixmap = &pixmap;
     QFuture<FutureResult> future;
     QFutureWatcher<FutureResult>* watcher = new QFutureWatcher<FutureResult>(this);
     if (coverLocation.isEmpty() || !QFile::exists(coverLocation)) {
@@ -65,7 +67,7 @@ void CoverArtCache::requestPixmap(int trackId, const QString& coverLocation) {
 // Load cover from path stored in DB.
 // It is executed in a separate thread via QtConcurrent::run
 CoverArtCache::FutureResult CoverArtCache::loadImage(
-        int trackId, const QString &coverLocation) {
+        int trackId, const QString& coverLocation) {
     FutureResult res;
     res.trackId = trackId;
     res.coverLocation = coverLocation;
@@ -81,9 +83,9 @@ void CoverArtCache::imageLoaded() {
     FutureResult res = watcher->result();
 
     if (!res.img.isNull()) {
-        QPixmap pixmap = QPixmap::fromImage(res.img);
-        if (QPixmapCache::insert(res.coverLocation, pixmap)) {
-            emit(pixmapFound(res.trackId, pixmap));
+        m_pixmap->convertFromImage(res.img);
+        if (QPixmapCache::insert(res.coverLocation, *m_pixmap)) {
+            emit(pixmapFound(res.trackId));
         }
     }
     m_runningIds.remove(res.trackId);
@@ -205,9 +207,9 @@ void CoverArtCache::imageFound() {
     }
 
     if (!res.img.isNull()) {
-        QPixmap pixmap = QPixmap::fromImage(res.img);
-        if (QPixmapCache::insert(coverLocation, pixmap)) {
-            emit(pixmapFound(res.trackId, pixmap));
+        m_pixmap->convertFromImage(res.img);
+        if (QPixmapCache::insert(coverLocation, *m_pixmap)) {
+            emit(pixmapFound(res.trackId));
         }
     }
     m_runningIds.remove(res.trackId);
