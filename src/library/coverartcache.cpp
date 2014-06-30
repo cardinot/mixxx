@@ -218,7 +218,7 @@ void CoverArtCache::imageFound() {
 // if it's too big, we have to scale it.
 // big images would be quickly removed from cover cache.
 QImage CoverArtCache::rescaleBigImage(QImage img) {
-    const int MAXSIZE = 400;
+    const int MAXSIZE = 100;
     QSize size = img.size();
     if (size.height() > MAXSIZE || size.width() > MAXSIZE) {
         return img.scaled(MAXSIZE, MAXSIZE,
