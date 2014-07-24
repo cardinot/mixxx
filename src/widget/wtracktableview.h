@@ -9,6 +9,7 @@
 #include "library/libraryview.h"
 #include "library/trackmodel.h" // Can't forward declare enums
 #include "widget/wlibrarytableview.h"
+#include "dlgcoverartfetcher.h"
 #include "dlgtagfetcher.h"
 
 class ControlObjectThread;
@@ -100,6 +101,7 @@ class WTrackTableView : public WLibraryTableView {
     QSignalMapper m_loadTrackMapper;
 
     DlgTrackInfo* m_pTrackInfo;
+    DlgCoverArtFetcher m_DlgCoverArtFetcher;
     DlgTagFetcher m_DlgTagFetcher;
     QModelIndex currentTrackInfoIndex;
 

@@ -18,9 +18,11 @@ const int kMaxBPM = 240;
 const int kMaxInterval = static_cast<int>(1000.0 * (60.0 / kMinBPM));
 
 DlgTrackInfo::DlgTrackInfo(QWidget* parent,
-                           DlgTagFetcher& DlgTagFetcher)
+                           DlgTagFetcher& DlgTagFetcher,
+                           DlgCoverArtFetcher& DlgCoverArtFetcher)
             : QDialog(parent),
               m_pLoadedTrack(NULL),
+              m_DlgCoverArtFetcher(DlgCoverArtFetcher),
               m_DlgTagFetcher(DlgTagFetcher) {
     init();
 }
@@ -76,27 +78,40 @@ void DlgTrackInfo::init(){
     connect(CoverArtCache::instance(), SIGNAL(pixmapFound(int, QPixmap)),
             this, SLOT(slotPixmapFound(int, QPixmap)), Qt::DirectConnection);
 
+    //
     // Cover art actions
+    //
+    // search cover art from the internet
+    QAction* searchCover = new QAction(
+                tr("&Search"), this);
+    connect(searchCover, SIGNAL(triggered()),
+            this, SLOT(fetchCover()));
+
     // change cover art location
     QAction* changeCover = new QAction(
                 QIcon(":/images/library/ic_cover_change.png"),
                 tr("&Change"), this);
     connect(changeCover, SIGNAL(triggered()),
             this, SLOT(slotChangeCoverArt()));
+
     // unset cover art - load default
     QAction* unsetCover = new QAction(
                 QIcon(":/images/library/ic_cover_unset.png"),
                 tr("&Unset"), this);
     connect(unsetCover, SIGNAL(triggered()),
             this, SLOT(slotUnsetCoverArt()));
+
     // reload just cover art using the search algorithm (in CoverArtCache)
     QAction* reloadCover = new QAction(
                 QIcon(":/images/library/ic_cover_reload.png"),
                 tr("&Reload"), this);
     connect(reloadCover, SIGNAL(triggered()),
             this, SLOT(slotReloadCover()));
+    //
     // Cover art popup menu
+    //
     QMenu* coverMenu = new QMenu(this);
+    coverMenu->addAction(searchCover);
     coverMenu->addAction(changeCover);
     coverMenu->addAction(unsetCover);
     coverMenu->addAction(reloadCover);
@@ -536,6 +551,11 @@ void DlgTrackInfo::slotReloadCover() {
         m_sLoadedCoverLocation.clear();
         CoverArtCache::instance()->requestPixmap(m_pLoadedTrack->getId());
     }
+}
+
+void DlgTrackInfo::fetchCover() {
+    m_DlgCoverArtFetcher.init(m_pLoadedTrack);
+    m_DlgCoverArtFetcher.show();
 }
 
 void DlgTrackInfo::fetchTag() {

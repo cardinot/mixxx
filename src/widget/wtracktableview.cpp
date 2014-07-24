@@ -27,11 +27,12 @@ WTrackTableView::WTrackTableView(QWidget * parent,
                                       WTRACKTABLEVIEW_VSCROLLBARPOS_KEY)),
           m_pConfig(pConfig),
           m_pTrackCollection(pTrackCollection),
+          m_DlgCoverArtFetcher(NULL),
           m_DlgTagFetcher(NULL),
           m_sorting(sorting) {
     // Give a NULL parent because otherwise it inherits our style which can make
     // it unreadable. Bug #673411
-    m_pTrackInfo = new DlgTrackInfo(NULL,m_DlgTagFetcher);
+    m_pTrackInfo = new DlgTrackInfo(NULL, m_DlgTagFetcher, m_DlgCoverArtFetcher);
     connect(m_pTrackInfo, SIGNAL(next()),
             this, SLOT(slotNextTrackInfo()));
     connect(m_pTrackInfo, SIGNAL(previous()),
