@@ -487,16 +487,6 @@ class TagLib(Dependence):
             build.env.Append(CPPDEFINES='TAGLIB_STATIC')
 
 
-class LastFM(Dependence):
-    def configure(self, build, conf):
-	if not conf.CheckLib(['liblastfm']):
-            raise Exception(
-                "Could not find liblastfm or its development headers.")
-
-        if build.platform_is_windows and build.static_dependencies:
-            build.env.Append(CPPDEFINES='LASTFM')
-
-
 class Chromaprint(Dependence):
     def configure(self, build, conf):
         if not conf.CheckLib(['chromaprint', 'libchromaprint', 'chromaprint_p', 'libchromaprint_p']):
@@ -1138,7 +1128,7 @@ class MixxxCore(Feature):
 
     def depends(self, build):
         return [SoundTouch, ReplayGain, PortAudio, PortMIDI, Qt, TestHeaders,
-                FidLib, SndFile, FLAC, OggVorbis, OpenGL, TagLib, LastFM, ProtoBuf,
+                FidLib, SndFile, FLAC, OggVorbis, OpenGL, TagLib, ProtoBuf,
                 Chromaprint, RubberBand, SecurityFramework, CoreServices]
 
     def post_dependency_check_configure(self, build, conf):
