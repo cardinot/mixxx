@@ -5,7 +5,10 @@
 
 DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
         : QDialog(parent),
-          m_track(NULL) {
+          m_track(NULL),
+          m_pNetworkManager(new QNetworkAccessManager(this)),
+          m_pLastDownloadReply(NULL),
+          m_pLastSearchReply(NULL) {
     setupUi(this);
 
     connect(btnCancel, SIGNAL(clicked()),
@@ -44,35 +47,38 @@ void DlgCoverArtFetcher::slotSearch() {
     url.addQueryItem("api_key", APIKEY_LASTFM);
 
     QNetworkRequest req(url);
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    m_pLastReply = manager->get(req);
-    connect(m_pLastReply, SIGNAL(finished()), this, SLOT(slotSearchFinished()));
+    m_pLastSearchReply = m_pNetworkManager->get(req);
+    connect(m_pLastSearchReply, SIGNAL(finished()), this, SLOT(slotSearchFinished()));
 }
 
 void DlgCoverArtFetcher::slotSearchFinished() {
     m_searchresults.clear();
-    m_pLastReply->deleteLater();
+    if (m_pLastSearchReply->error() != QNetworkReply::NoError) {
+        m_pLastSearchReply->deleteLater();
+        m_pLastSearchReply = NULL;
+        btnSearch->setEnabled(true);
+        return;
+    }
 
-    QXmlStreamReader xml(m_pLastReply->readAll());
+    QXmlStreamReader xml(m_pLastSearchReply->readAll());
     while(!xml.atEnd() && !xml.hasError())
     {
         xml.readNext();
         if(xml.name() == "album") {
-            SearchResult result = parseAlbum(xml);
-            if (result.cover_url.isValid()) {
-                m_searchresults.append(result);
-            }
+            parseAlbum(xml);
         }
     }
-    qDebug() << "found: "  << m_searchresults.size();
+    m_pLastSearchReply->deleteLater();
+    m_pLastSearchReply = NULL;
+    downloadNextCover();
     btnSearch->setEnabled(true);
 }
 
-DlgCoverArtFetcher::SearchResult DlgCoverArtFetcher::parseAlbum(
-                                                QXmlStreamReader& xml) {
+void DlgCoverArtFetcher::parseAlbum(QXmlStreamReader& xml) {
     if (xml.name() != "album") {
-        return SearchResult();
+        return;
     }
+    QString cover_url;
     SearchResult result;
     while(!xml.atEnd() && !xml.hasError())
     {
@@ -89,10 +95,63 @@ DlgCoverArtFetcher::SearchResult DlgCoverArtFetcher::parseAlbum(
             result.artist = xml.readElementText();
         } else if (name == "image") {
             if (xml.attributes().value("size").toString() == "extralarge") {
-                result.cover_url = xml.readElementText();
+                cover_url = xml.readElementText();
             }
         }
     }
 
-    return result;
+    if (!cover_url.isEmpty()) {
+        m_searchresults.insert(cover_url, result);
+    }
+}
+
+void DlgCoverArtFetcher::downloadNextCover() {
+    if (m_searchresults.isEmpty()) {
+        return;
+    }
+
+    QString nextUrl;
+    QMapIterator<QString, SearchResult> it(m_searchresults);
+    while (it.hasNext()) {
+        it.next();
+        if (it.value().cover.isNull()) {
+            nextUrl = it.key();
+            break;
+        }
+    }
+
+    if (nextUrl.isEmpty()) {
+        return;
+    }
+QUrl a(nextUrl);
+    QNetworkRequest req(a);
+    m_pLastDownloadReply = m_pNetworkManager->get(req);
+    QString reqUrl = m_pLastDownloadReply->url().toString();
+    if (nextUrl != reqUrl) {
+        m_searchresults.insert(reqUrl, m_searchresults.take(nextUrl));
+    }
+    connect(m_pLastDownloadReply, SIGNAL(finished()),
+            this, SLOT(slotDownloadFinished()));
+}
+
+void DlgCoverArtFetcher::slotDownloadFinished() {
+    if (m_pLastDownloadReply->error() != QNetworkReply::NoError) {
+        m_pLastDownloadReply->deleteLater();
+        m_pLastDownloadReply = NULL;
+        return;
+    }
+
+    QPixmap pixmap;
+    QString reqUrl = m_pLastDownloadReply->url().toString();
+    if (pixmap.loadFromData(m_pLastDownloadReply->readAll())) {
+        SearchResult res = m_searchresults.value(reqUrl);
+        res.cover = pixmap;
+        m_searchresults.insert(reqUrl, res);
+    } else {
+        m_searchresults.remove(reqUrl);
+    }
+
+    m_pLastDownloadReply->deleteLater();
+    m_pLastDownloadReply = NULL;
+    downloadNextCover();
 }

@@ -21,22 +21,26 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
   private slots:
     void slotCancel();
     void slotSearch();
+    void slotDownloadFinished();
     void slotSearchFinished();
 
   private:
     struct SearchResult {
       QString artist;
       QString album;
-      QUrl cover_url;
+      QPixmap cover;
     };
 
     TrackPointer m_track;
-    QNetworkReply* m_pLastReply;
+    QNetworkAccessManager* m_pNetworkManager;
+    QNetworkReply* m_pLastDownloadReply;
+    QNetworkReply* m_pLastSearchReply;
     QString m_sLastRequestedAlbum;
     QString m_sLastRequestedArtist;
-    QList<SearchResult> m_searchresults;
+    QMap<QString, SearchResult> m_searchresults;
 
-    SearchResult parseAlbum(QXmlStreamReader& xml);
+    void parseAlbum(QXmlStreamReader& xml);
+    void downloadNextCover();
 };
 
 #endif // DLGCOVERARTFETCHER_H
