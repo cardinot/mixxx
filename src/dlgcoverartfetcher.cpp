@@ -38,6 +38,7 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
     m_sLastRequestedArtist.clear();
     m_searchresults.clear();
     coverView->setModel(NULL);
+    setStatusOfSearchBtn(false);
 }
 
 void DlgCoverArtFetcher::abortSearch() {
@@ -56,9 +57,18 @@ void DlgCoverArtFetcher::slotCancel() {
     close();
 }
 
+void DlgCoverArtFetcher::setStatusOfSearchBtn(bool isSearching) {
+    btnSearch->setChecked(isSearching);
+    if (isSearching) {
+        btnSearch->setText("Abort");
+    } else {
+        btnSearch->setText("Search");
+    }
+}
+
 void DlgCoverArtFetcher::slotSearch() {
     if (btnSearch->isChecked()) {
-        btnSearch->setText("Abort");
+        setStatusOfSearchBtn(true);
         m_sLastRequestedAlbum = txtAlbum->text();
         m_sLastRequestedArtist = txtArtist->text();
 
@@ -75,7 +85,7 @@ void DlgCoverArtFetcher::slotSearch() {
         connect(m_pLastSearchReply, SIGNAL(finished()), this, SLOT(slotSearchFinished()));
     } else {
         abortSearch();
-        btnSearch->setText("Search");
+        setStatusOfSearchBtn(false);
     }
 }
 
@@ -183,8 +193,7 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
 }
 
 void DlgCoverArtFetcher::showResults() {
-    btnSearch->setText("Search");
-    btnSearch->setChecked(false);
+    setStatusOfSearchBtn(false);
 
     if (m_searchresults.isEmpty()) {
         coverView->setModel(NULL);
