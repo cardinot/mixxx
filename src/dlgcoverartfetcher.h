@@ -41,6 +41,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
 
     void parseAlbum(QXmlStreamReader& xml);
     void downloadNextCover();
+    void showResults();
 };
 
 #endif // DLGCOVERARTFETCHER_H

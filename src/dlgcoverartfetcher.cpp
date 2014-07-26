@@ -1,3 +1,4 @@
+#include <QStandardItemModel>
 #include <QStringBuilder>
 #include <QtDebug>
 
@@ -27,6 +28,7 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
     m_sLastRequestedAlbum.clear();
     m_sLastRequestedArtist.clear();
     m_searchresults.clear();
+    coverView->setModel(NULL);
 }
 
 void DlgCoverArtFetcher::slotCancel() {
@@ -121,11 +123,11 @@ void DlgCoverArtFetcher::downloadNextCover() {
     }
 
     if (nextUrl.isEmpty()) {
+        showResults();
         return;
     }
-QUrl a(nextUrl);
-    QNetworkRequest req(a);
-    m_pLastDownloadReply = m_pNetworkManager->get(req);
+
+    m_pLastDownloadReply = m_pNetworkManager->get(QNetworkRequest(QUrl(nextUrl)));
     QString reqUrl = m_pLastDownloadReply->url().toString();
     if (nextUrl != reqUrl) {
         m_searchresults.insert(reqUrl, m_searchresults.take(nextUrl));
@@ -154,4 +156,34 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
     m_pLastDownloadReply->deleteLater();
     m_pLastDownloadReply = NULL;
     downloadNextCover();
+}
+
+void DlgCoverArtFetcher::showResults() {
+    if (m_searchresults.isEmpty()) {
+        coverView->setModel(NULL);
+        return;
+    }
+
+    const int COLUMNCOUNT = 5;
+    const int ROWCOUNT = m_searchresults.size() / COLUMNCOUNT + 1;
+    QStandardItemModel* model = new QStandardItemModel(ROWCOUNT, COLUMNCOUNT, this);
+    coverView->setModel(model);
+
+    int index = 0;
+    QList<SearchResult> results = m_searchresults.values();
+    for (int row=0; row<ROWCOUNT; row++) {
+        coverView->setRowHeight(row, 100);
+        for (int column=0; column<COLUMNCOUNT; column++) {
+            if (index >= results.size()) {
+                return;
+            }
+
+            QPushButton* btn = new QPushButton("");
+            btn->setFlat(true);
+            btn->setIcon(results[index].cover);
+            btn->setIconSize(QSize(100,100));
+            coverView->setIndexWidget(coverView->model()->index(row, column), btn);
+            index++;
+        }
+    }
 }
