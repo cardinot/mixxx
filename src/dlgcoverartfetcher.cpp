@@ -12,10 +12,11 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
           m_pLastSearchReply(NULL) {
     setupUi(this);
 
-    connect(btnCancel, SIGNAL(clicked()),
-            this, SLOT(slotCancel()));
+    btnSearch->setCheckable(true);
     connect(btnSearch, SIGNAL(clicked()),
             this, SLOT(slotSearch()));
+    connect(btnCancel, SIGNAL(clicked()),
+            this, SLOT(slotCancel()));
 
     coverView->horizontalHeader()->setStretchLastSection(true);
     coverView->horizontalHeader()->setVisible(false);
@@ -44,21 +45,31 @@ void DlgCoverArtFetcher::slotCancel() {
 }
 
 void DlgCoverArtFetcher::slotSearch() {
-    btnSearch->setEnabled(false);
-    m_sLastRequestedAlbum = txtAlbum->text();
-    m_sLastRequestedArtist = txtArtist->text();
+    if (btnSearch->isChecked()) {
+        btnSearch->setText("Abort");
+        m_sLastRequestedAlbum = txtAlbum->text();
+        m_sLastRequestedArtist = txtArtist->text();
 
-    QUrl url;
-    url.setScheme("http");
-    url.setHost("ws.audioscrobbler.com");
-    url.setPath("/2.0/");
-    url.addQueryItem("method", "album.search");
-    url.addQueryItem("album", m_sLastRequestedAlbum % " " % m_sLastRequestedArtist);
-    url.addQueryItem("api_key", APIKEY_LASTFM);
+        QUrl url;
+        url.setScheme("http");
+        url.setHost("ws.audioscrobbler.com");
+        url.setPath("/2.0/");
+        url.addQueryItem("method", "album.search");
+        url.addQueryItem("album", m_sLastRequestedAlbum % " " % m_sLastRequestedArtist);
+        url.addQueryItem("api_key", APIKEY_LASTFM);
 
-    QNetworkRequest req(url);
-    m_pLastSearchReply = m_pNetworkManager->get(req);
-    connect(m_pLastSearchReply, SIGNAL(finished()), this, SLOT(slotSearchFinished()));
+        QNetworkRequest req(url);
+        m_pLastSearchReply = m_pNetworkManager->get(req);
+        connect(m_pLastSearchReply, SIGNAL(finished()), this, SLOT(slotSearchFinished()));
+    } else {
+        if (m_pLastSearchReply != NULL) {
+            m_pLastSearchReply->abort();
+        }
+        if (m_pLastDownloadReply != NULL) {
+            m_pLastDownloadReply->abort();
+        }
+        btnSearch->setText("Search");
+    }
 }
 
 void DlgCoverArtFetcher::slotSearchFinished() {
@@ -66,7 +77,6 @@ void DlgCoverArtFetcher::slotSearchFinished() {
     if (m_pLastSearchReply->error() != QNetworkReply::NoError) {
         m_pLastSearchReply->deleteLater();
         m_pLastSearchReply = NULL;
-        btnSearch->setEnabled(true);
         return;
     }
 
@@ -81,7 +91,6 @@ void DlgCoverArtFetcher::slotSearchFinished() {
     m_pLastSearchReply->deleteLater();
     m_pLastSearchReply = NULL;
     downloadNextCover();
-    btnSearch->setEnabled(true);
 }
 
 void DlgCoverArtFetcher::parseAlbum(QXmlStreamReader& xml) {
@@ -167,6 +176,9 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
 }
 
 void DlgCoverArtFetcher::showResults() {
+    btnSearch->setText("Search");
+    btnSearch->setChecked(false);
+
     if (m_searchresults.isEmpty()) {
         coverView->setModel(NULL);
         return;
