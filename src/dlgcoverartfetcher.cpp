@@ -40,7 +40,19 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
     coverView->setModel(NULL);
 }
 
+void DlgCoverArtFetcher::abortSearch() {
+    if (m_pLastSearchReply != NULL) {
+        m_pLastSearchReply->abort();
+        m_pLastSearchReply->deleteLater();
+    }
+    if (m_pLastDownloadReply != NULL) {
+        m_pLastDownloadReply->abort();
+        m_pLastDownloadReply->deleteLater();
+    }
+}
+
 void DlgCoverArtFetcher::slotCancel() {
+    abortSearch();
     close();
 }
 
@@ -62,12 +74,7 @@ void DlgCoverArtFetcher::slotSearch() {
         m_pLastSearchReply = m_pNetworkManager->get(req);
         connect(m_pLastSearchReply, SIGNAL(finished()), this, SLOT(slotSearchFinished()));
     } else {
-        if (m_pLastSearchReply != NULL) {
-            m_pLastSearchReply->abort();
-        }
-        if (m_pLastDownloadReply != NULL) {
-            m_pLastDownloadReply->abort();
-        }
+        abortSearch();
         btnSearch->setText("Search");
     }
 }

@@ -39,6 +39,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     QString m_sLastRequestedArtist;
     QMap<QString, SearchResult> m_searchresults;
 
+    void abortSearch();
     void parseAlbum(QXmlStreamReader& xml);
     void downloadNextCover();
     void showResults();
