@@ -23,7 +23,7 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
     coverView->setAlternatingRowColors(false);
     coverView->setSelectionBehavior(QAbstractItemView::SelectItems);
     coverView->setSelectionMode(QAbstractItemView::NoSelection);
-    coverView->setEditTriggers(false);
+    coverView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
 DlgCoverArtFetcher::~DlgCoverArtFetcher() {
