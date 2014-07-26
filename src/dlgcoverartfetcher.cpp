@@ -16,6 +16,14 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
             this, SLOT(slotCancel()));
     connect(btnSearch, SIGNAL(clicked()),
             this, SLOT(slotSearch()));
+
+    coverView->horizontalHeader()->setStretchLastSection(true);
+    coverView->horizontalHeader()->setVisible(false);
+    coverView->verticalHeader()->setVisible(false);
+    coverView->setAlternatingRowColors(false);
+    coverView->setSelectionBehavior(QAbstractItemView::SelectItems);
+    coverView->setSelectionMode(QAbstractItemView::NoSelection);
+    coverView->setEditTriggers(false);
 }
 
 DlgCoverArtFetcher::~DlgCoverArtFetcher() {
