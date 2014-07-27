@@ -56,8 +56,10 @@ class WTrackTableView : public WLibraryTableView {
     void slotShowDlgTagFetcher();
     void slotNextTrackInfo();
     void slotNextDlgTagFetcher();
+    void slotNextDlgCoverArtFetcher();
     void slotPrevTrackInfo();
     void slotPrevDlgTagFetcher();
+    void slotPrevDlgCoverArtFetcher();
     void slotSendToAutoDJ();
     void slotSendToAutoDJTop();
     void slotReloadTrackMetadata();
@@ -77,6 +79,7 @@ class WTrackTableView : public WLibraryTableView {
     void sendToAutoDJ(bool bTop);
     void showTrackInfo(QModelIndex index);
     void showDlgTagFetcher(QModelIndex index);
+    void showDlgCoverArtFetcher(QModelIndex index);
     void createActions();
     void dragMoveEvent(QDragMoveEvent * event);
     void dragEnterEvent(QDragEnterEvent * event);

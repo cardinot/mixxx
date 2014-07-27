@@ -12,11 +12,16 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
           m_pLastSearchReply(NULL) {
     setupUi(this);
 
-    btnSearch->setCheckable(true);
     connect(btnSearch, SIGNAL(clicked()),
             this, SLOT(slotSearch()));
     connect(btnCancel, SIGNAL(clicked()),
             this, SLOT(slotCancel()));
+    connect(btnPrev, SIGNAL(clicked()),
+            this, SIGNAL(previous()));
+    connect(btnNext, SIGNAL(clicked()),
+            this, SIGNAL(next()));
+
+    btnSearch->setCheckable(true);
 
     coverView->horizontalHeader()->setStretchLastSection(true);
     coverView->horizontalHeader()->setVisible(false);
@@ -32,6 +37,7 @@ DlgCoverArtFetcher::~DlgCoverArtFetcher() {
 }
 
 void DlgCoverArtFetcher::init(const TrackPointer track) {
+    abortSearch();
     m_searchresults.clear();
     coverView->setModel(NULL);
     setStatusOfSearchBtn(false);
@@ -41,6 +47,15 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
     } else {
         txtAlbum->setText(track->getAlbum());
         txtArtist->setText(track->getArtist());
+    }
+}
+
+void DlgCoverArtFetcher::setStatusOfSearchBtn(bool isSearching) {
+    btnSearch->setChecked(isSearching);
+    if (isSearching) {
+        btnSearch->setText("Abort");
+    } else {
+        btnSearch->setText("Search");
     }
 }
 
@@ -58,15 +73,6 @@ void DlgCoverArtFetcher::abortSearch() {
 void DlgCoverArtFetcher::slotCancel() {
     abortSearch();
     close();
-}
-
-void DlgCoverArtFetcher::setStatusOfSearchBtn(bool isSearching) {
-    btnSearch->setChecked(isSearching);
-    if (isSearching) {
-        btnSearch->setText("Abort");
-    } else {
-        btnSearch->setText("Search");
-    }
 }
 
 void DlgCoverArtFetcher::slotSearch() {

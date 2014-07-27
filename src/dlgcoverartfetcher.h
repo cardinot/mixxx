@@ -18,6 +18,10 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
 
     void init(const TrackPointer track);
 
+  signals:
+    void next();
+    void previous();
+
   private slots:
     void slotCancel();
     void slotSearch();

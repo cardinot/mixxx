@@ -41,7 +41,10 @@ WTrackTableView::WTrackTableView(QWidget * parent,
             this, SLOT(slotNextDlgTagFetcher()));
     connect(&m_DlgTagFetcher, SIGNAL(previous()),
             this, SLOT(slotPrevDlgTagFetcher()));
-
+    connect(&m_DlgCoverArtFetcher, SIGNAL(next()),
+            this, SLOT(slotNextDlgCoverArtFetcher()));
+    connect(&m_DlgCoverArtFetcher, SIGNAL(previous()),
+            this, SLOT(slotPrevDlgCoverArtFetcher()));
 
     connect(&m_loadTrackMapper, SIGNAL(mapped(QString)),
             this, SLOT(loadSelectionToGroup(QString)));
@@ -582,6 +585,34 @@ void WTrackTableView::showTrackInfo(QModelIndex index) {
     m_pTrackInfo->slotLoadCoverArt(coverLocation, md5Hash, trackId);
 
     m_pTrackInfo->show();
+}
+
+void WTrackTableView::slotNextDlgCoverArtFetcher() {
+    QModelIndex nextRow = currentTrackInfoIndex.sibling(
+        currentTrackInfoIndex.row()+1, currentTrackInfoIndex.column());
+    if (nextRow.isValid())
+        showDlgCoverArtFetcher(nextRow);
+}
+
+void WTrackTableView::slotPrevDlgCoverArtFetcher() {
+    QModelIndex prevRow = currentTrackInfoIndex.sibling(
+        currentTrackInfoIndex.row()-1, currentTrackInfoIndex.column());
+    if (prevRow.isValid())
+        showDlgCoverArtFetcher(prevRow);
+}
+
+void WTrackTableView::showDlgCoverArtFetcher(QModelIndex index) {
+    TrackModel* trackModel = getTrackModel();
+
+    if (!trackModel) {
+        return;
+    }
+
+    TrackPointer pTrack = trackModel->getTrack(index);
+    // NULL is fine
+    m_DlgCoverArtFetcher.init(pTrack);
+    currentTrackInfoIndex = index;
+    m_DlgCoverArtFetcher.show();
 }
 
 void WTrackTableView::slotNextDlgTagFetcher() {
