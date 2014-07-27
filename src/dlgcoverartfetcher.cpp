@@ -82,6 +82,7 @@ void DlgCoverArtFetcher::slotCancel() {
 
 void DlgCoverArtFetcher::slotSearch() {
     if (btnSearch->isChecked()) {
+        coverView->setModel(NULL);
         setStatusOfSearchBtn(true);
 
         QUrl url;
@@ -207,6 +208,8 @@ void DlgCoverArtFetcher::showResults() {
         return;
     }
 
+    // TODO: The whole COVERVIEW must be improved!
+    //       it is just a sketch to make us able to test the downloads.
     const int COLUMNCOUNT = 5;
     const int ROWCOUNT = m_searchresults.size() / COLUMNCOUNT + 1;
     QStandardItemModel* model = new QStandardItemModel(ROWCOUNT, COLUMNCOUNT, this);
