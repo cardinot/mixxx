@@ -217,6 +217,7 @@ void DlgCoverArtFetcher::showResults() {
         coverView->setRowHeight(row, 100);
         for (int column=0; column<COLUMNCOUNT; column++) {
             if (index >= m_searchresults.size()) {
+                setStatusOfSearchBtn(false);
                 return;
             }
 
@@ -228,6 +229,4 @@ void DlgCoverArtFetcher::showResults() {
             index++;
         }
     }
-
-    setStatusOfSearchBtn(false);
 }
