@@ -105,6 +105,7 @@ void DlgCoverArtFetcher::slotSearchFinished() {
     if (m_pLastSearchReply->error() != QNetworkReply::NoError) {
         m_pLastSearchReply->deleteLater();
         m_pLastSearchReply = NULL;
+        setStatusOfSearchBtn(false);
         return;
     }
 
@@ -185,6 +186,7 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
     if (m_pLastDownloadReply->error() != QNetworkReply::NoError) {
         m_pLastDownloadReply->deleteLater();
         m_pLastDownloadReply = NULL;
+        setStatusOfSearchBtn(false);
         return;
     }
 
