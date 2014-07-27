@@ -39,13 +39,16 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     QNetworkAccessManager* m_pNetworkManager;
     QNetworkReply* m_pLastDownloadReply;
     QNetworkReply* m_pLastSearchReply;
-    QMap<QString, SearchResult> m_searchresults;
+
+    QList<QUrl> m_downloadQueue;
+    QList<SearchResult> m_searchresults;
 
     void abortSearch();
     void setStatusOfSearchBtn(bool isSearching);
-    void parseAlbum(QXmlStreamReader& xml);
     void downloadNextCover();
     void showResults();
+    void parseAlbum(QXmlStreamReader& xml, QString& album,
+                    QString& artist, QUrl& url) const;
 };
 
 #endif // DLGCOVERARTFETCHER_H

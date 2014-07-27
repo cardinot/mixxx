@@ -38,6 +38,7 @@ DlgCoverArtFetcher::~DlgCoverArtFetcher() {
 
 void DlgCoverArtFetcher::init(const TrackPointer track) {
     abortSearch();
+    m_downloadQueue.clear();
     m_searchresults.clear();
     coverView->setModel(NULL);
     setStatusOfSearchBtn(false);
@@ -91,9 +92,9 @@ void DlgCoverArtFetcher::slotSearch() {
         url.addQueryItem("album", txtAlbum->text() % " " % txtArtist->text());
         url.addQueryItem("api_key", APIKEY_LASTFM);
 
-        QNetworkRequest req(url);
-        m_pLastSearchReply = m_pNetworkManager->get(req);
-        connect(m_pLastSearchReply, SIGNAL(finished()), this, SLOT(slotSearchFinished()));
+        m_pLastSearchReply = m_pNetworkManager->get(QNetworkRequest(url));
+        connect(m_pLastSearchReply, SIGNAL(finished()),
+                this, SLOT(slotSearchFinished()));
     } else {
         abortSearch();
         setStatusOfSearchBtn(false);
@@ -101,7 +102,9 @@ void DlgCoverArtFetcher::slotSearch() {
 }
 
 void DlgCoverArtFetcher::slotSearchFinished() {
+    m_downloadQueue.clear();
     m_searchresults.clear();
+
     if (m_pLastSearchReply->error() != QNetworkReply::NoError) {
         m_pLastSearchReply->deleteLater();
         m_pLastSearchReply = NULL;
@@ -109,25 +112,34 @@ void DlgCoverArtFetcher::slotSearchFinished() {
         return;
     }
 
+    QUrl url;
+    SearchResult res;
     QXmlStreamReader xml(m_pLastSearchReply->readAll());
     while(!xml.atEnd() && !xml.hasError())
     {
         xml.readNext();
         if(xml.name() == "album") {
-            parseAlbum(xml);
+            parseAlbum(xml, res.album, res.artist, url);
+            if (url.isValid()) {
+                m_downloadQueue.append(url);
+                m_searchresults.append(res);
+            }
         }
     }
+
+    Q_ASSERT(m_downloadQueue.size() == m_searchresults.size());
+
     m_pLastSearchReply->deleteLater();
     m_pLastSearchReply = NULL;
     downloadNextCover();
 }
 
-void DlgCoverArtFetcher::parseAlbum(QXmlStreamReader& xml) {
+void DlgCoverArtFetcher::parseAlbum(QXmlStreamReader& xml, QString& album,
+                                    QString& artist, QUrl& url) const {
     if (xml.name() != "album") {
         return;
     }
-    QString cover_url;
-    SearchResult result;
+
     while(!xml.atEnd() && !xml.hasError())
     {
         xml.readNext();
@@ -138,66 +150,49 @@ void DlgCoverArtFetcher::parseAlbum(QXmlStreamReader& xml) {
         }
 
         if (name == "name") {
-            result.album = xml.readElementText();
+            album = xml.readElementText();
         } else if (name == "artist") {
-            result.artist = xml.readElementText();
+            artist = xml.readElementText();
         } else if (name == "image") {
             if (xml.attributes().value("size").toString() == "extralarge") {
-                cover_url = xml.readElementText();
+                url = xml.readElementText();
             }
         }
-    }
-
-    if (!cover_url.isEmpty()) {
-        m_searchresults.insert(cover_url, result);
     }
 }
 
 void DlgCoverArtFetcher::downloadNextCover() {
-    if (m_searchresults.isEmpty()) {
-        return;
-    }
-
-    QString nextUrl;
-    QMapIterator<QString, SearchResult> it(m_searchresults);
-    while (it.hasNext()) {
-        it.next();
-        if (it.value().cover.isNull()) {
-            nextUrl = it.key();
-            break;
-        }
-    }
-
-    if (nextUrl.isEmpty()) {
+    if (m_downloadQueue.isEmpty()) {
         showResults();
         return;
     }
 
-    m_pLastDownloadReply = m_pNetworkManager->get(QNetworkRequest(QUrl(nextUrl)));
-    QString reqUrl = m_pLastDownloadReply->url().toString();
-    if (nextUrl != reqUrl) {
-        m_searchresults.insert(reqUrl, m_searchresults.take(nextUrl));
-    }
+    m_pLastDownloadReply = m_pNetworkManager->get(
+                QNetworkRequest(m_downloadQueue.first()));
+
     connect(m_pLastDownloadReply, SIGNAL(finished()),
             this, SLOT(slotDownloadFinished()));
 }
 
 void DlgCoverArtFetcher::slotDownloadFinished() {
+    m_downloadQueue.removeFirst();
+
     if (m_pLastDownloadReply->error() != QNetworkReply::NoError) {
         m_pLastDownloadReply->deleteLater();
         m_pLastDownloadReply = NULL;
-        setStatusOfSearchBtn(false);
+        m_searchresults.removeFirst();
+        downloadNextCover();
         return;
     }
 
+    Q_ASSERT(m_searchresults.first().cover.isNull());
+
     QPixmap pixmap;
-    QString reqUrl = m_pLastDownloadReply->url().toString();
     if (pixmap.loadFromData(m_pLastDownloadReply->readAll())) {
-        SearchResult res = m_searchresults.value(reqUrl);
-        res.cover = pixmap;
-        m_searchresults.insert(reqUrl, res);
+        m_searchresults.first().cover = pixmap;
+        m_searchresults.move(0, m_searchresults.size() - 1);
     } else {
-        m_searchresults.remove(reqUrl);
+        m_searchresults.removeFirst();
     }
 
     m_pLastDownloadReply->deleteLater();
@@ -206,10 +201,9 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
 }
 
 void DlgCoverArtFetcher::showResults() {
-    setStatusOfSearchBtn(false);
-
     if (m_searchresults.isEmpty()) {
         coverView->setModel(NULL);
+        setStatusOfSearchBtn(false);
         return;
     }
 
@@ -219,20 +213,21 @@ void DlgCoverArtFetcher::showResults() {
     coverView->setModel(model);
 
     int index = 0;
-    QList<SearchResult> results = m_searchresults.values();
     for (int row=0; row<ROWCOUNT; row++) {
         coverView->setRowHeight(row, 100);
         for (int column=0; column<COLUMNCOUNT; column++) {
-            if (index >= results.size()) {
+            if (index >= m_searchresults.size()) {
                 return;
             }
 
             QPushButton* btn = new QPushButton("");
             btn->setFlat(true);
-            btn->setIcon(results[index].cover);
+            btn->setIcon(m_searchresults.at(index).cover);
             btn->setIconSize(QSize(100,100));
             coverView->setIndexWidget(coverView->model()->index(row, column), btn);
             index++;
         }
     }
+
+    setStatusOfSearchBtn(false);
 }
