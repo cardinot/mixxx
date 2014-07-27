@@ -32,11 +32,16 @@ DlgCoverArtFetcher::~DlgCoverArtFetcher() {
 }
 
 void DlgCoverArtFetcher::init(const TrackPointer track) {
-    txtAlbum->setText(track->getAlbum());
-    txtArtist->setText(track->getArtist());
     m_searchresults.clear();
     coverView->setModel(NULL);
     setStatusOfSearchBtn(false);
+
+    if (track->getAlbum().isEmpty() && track->getArtist().isEmpty()) {
+        txtAlbum->setText(track->getTitle());
+    } else {
+        txtAlbum->setText(track->getAlbum());
+        txtArtist->setText(track->getArtist());
+    }
 }
 
 void DlgCoverArtFetcher::abortSearch() {
