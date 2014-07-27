@@ -35,8 +35,6 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     QNetworkAccessManager* m_pNetworkManager;
     QNetworkReply* m_pLastDownloadReply;
     QNetworkReply* m_pLastSearchReply;
-    QString m_sLastRequestedAlbum;
-    QString m_sLastRequestedArtist;
     QMap<QString, SearchResult> m_searchresults;
 
     void abortSearch();

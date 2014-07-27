@@ -34,8 +34,6 @@ DlgCoverArtFetcher::~DlgCoverArtFetcher() {
 void DlgCoverArtFetcher::init(const TrackPointer track) {
     txtAlbum->setText(track->getAlbum());
     txtArtist->setText(track->getArtist());
-    m_sLastRequestedAlbum.clear();
-    m_sLastRequestedArtist.clear();
     m_searchresults.clear();
     coverView->setModel(NULL);
     setStatusOfSearchBtn(false);
@@ -69,15 +67,13 @@ void DlgCoverArtFetcher::setStatusOfSearchBtn(bool isSearching) {
 void DlgCoverArtFetcher::slotSearch() {
     if (btnSearch->isChecked()) {
         setStatusOfSearchBtn(true);
-        m_sLastRequestedAlbum = txtAlbum->text();
-        m_sLastRequestedArtist = txtArtist->text();
 
         QUrl url;
         url.setScheme("http");
         url.setHost("ws.audioscrobbler.com");
         url.setPath("/2.0/");
         url.addQueryItem("method", "album.search");
-        url.addQueryItem("album", m_sLastRequestedAlbum % " " % m_sLastRequestedArtist);
+        url.addQueryItem("album", txtAlbum->text() % " " % txtArtist->text());
         url.addQueryItem("api_key", APIKEY_LASTFM);
 
         QNetworkRequest req(url);
