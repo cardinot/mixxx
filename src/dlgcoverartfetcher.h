@@ -23,7 +23,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     void previous();
 
   private slots:
-    void slotCancel();
+    void slotClose();
     void slotSearch();
     void slotDownloadFinished();
     void slotSearchFinished();
