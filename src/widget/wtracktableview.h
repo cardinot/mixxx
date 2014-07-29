@@ -85,6 +85,7 @@ class WTrackTableView : public WLibraryTableView {
     void dragEnterEvent(QDragEnterEvent * event);
     void dropEvent(QDropEvent * event);
     void lockBpm(bool lock);
+    void updateDlgs(const QModelIndex& row);
 
     void slotLoadCoverArt();
     void selectionChanged(const QItemSelection &selected,

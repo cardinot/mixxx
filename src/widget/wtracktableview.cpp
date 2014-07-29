@@ -552,14 +552,23 @@ void WTrackTableView::slotShowTrackInfo() {
     }
 }
 
+void WTrackTableView::updateDlgs(const QModelIndex& row) {
+    if (m_pTrackInfo->isVisible()) {
+        showTrackInfo(row);
+    }
+    if (m_DlgCoverArtFetcher.isVisible()) {
+        showDlgCoverArtFetcher(row);
+    }
+    if (m_DlgTagFetcher.isVisible()) {
+        showDlgTagFetcher(row);
+    }
+}
+
 void WTrackTableView::slotNextTrackInfo() {
     QModelIndex nextRow = currentTrackInfoIndex.sibling(
         currentTrackInfoIndex.row()+1, currentTrackInfoIndex.column());
     if (nextRow.isValid()) {
-        showTrackInfo(nextRow);
-        if (m_DlgTagFetcher.isVisible()) {
-            showDlgTagFetcher(nextRow);
-        }
+        updateDlgs(nextRow);
     }
 }
 
@@ -567,10 +576,7 @@ void WTrackTableView::slotPrevTrackInfo() {
     QModelIndex prevRow = currentTrackInfoIndex.sibling(
         currentTrackInfoIndex.row()-1, currentTrackInfoIndex.column());
     if (prevRow.isValid()) {
-        showTrackInfo(prevRow);
-        if (m_DlgTagFetcher.isVisible()) {
-            showDlgTagFetcher(prevRow);
-        }
+        updateDlgs(prevRow);
     }
 }
 
@@ -599,15 +605,17 @@ void WTrackTableView::showTrackInfo(QModelIndex index) {
 void WTrackTableView::slotNextDlgCoverArtFetcher() {
     QModelIndex nextRow = currentTrackInfoIndex.sibling(
         currentTrackInfoIndex.row()+1, currentTrackInfoIndex.column());
-    if (nextRow.isValid())
-        showDlgCoverArtFetcher(nextRow);
+    if (nextRow.isValid()) {
+        updateDlgs(nextRow);
+    }
 }
 
 void WTrackTableView::slotPrevDlgCoverArtFetcher() {
     QModelIndex prevRow = currentTrackInfoIndex.sibling(
         currentTrackInfoIndex.row()-1, currentTrackInfoIndex.column());
-    if (prevRow.isValid())
-        showDlgCoverArtFetcher(prevRow);
+    if (prevRow.isValid()) {
+        updateDlgs(prevRow);
+    }
 }
 
 void WTrackTableView::showDlgCoverArtFetcher(QModelIndex index) {
@@ -628,10 +636,7 @@ void WTrackTableView::slotNextDlgTagFetcher() {
     QModelIndex nextRow = currentTrackInfoIndex.sibling(
         currentTrackInfoIndex.row()+1, currentTrackInfoIndex.column());
     if (nextRow.isValid()) {
-        showDlgTagFetcher(nextRow);
-        if (m_pTrackInfo->isVisible()) {
-            showTrackInfo(nextRow);
-        }
+        updateDlgs(nextRow);
     }
 }
 
@@ -639,10 +644,7 @@ void WTrackTableView::slotPrevDlgTagFetcher() {
     QModelIndex prevRow = currentTrackInfoIndex.sibling(
         currentTrackInfoIndex.row()-1, currentTrackInfoIndex.column());
     if (prevRow.isValid()) {
-        showDlgTagFetcher(prevRow);
-        if (m_pTrackInfo->isVisible()) {
-            showTrackInfo(prevRow);
-        }
+        updateDlgs(prevRow);
     }
 }
 
