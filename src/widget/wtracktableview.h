@@ -54,12 +54,8 @@ class WTrackTableView : public WLibraryTableView {
     void slotOpenInFileBrowser();
     void slotShowTrackInfo();
     void slotShowDlgTagFetcher();
-    void slotNextTrackInfo();
-    void slotNextDlgTagFetcher();
-    void slotNextDlgCoverArtFetcher();
-    void slotPrevTrackInfo();
-    void slotPrevDlgTagFetcher();
-    void slotPrevDlgCoverArtFetcher();
+    void slotNextTrack();
+    void slotPrevTrack();
     void slotSendToAutoDJ();
     void slotSendToAutoDJTop();
     void slotReloadTrackMetadata();

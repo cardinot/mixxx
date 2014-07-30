@@ -34,17 +34,17 @@ WTrackTableView::WTrackTableView(QWidget * parent,
     // it unreadable. Bug #673411
     m_pTrackInfo = new DlgTrackInfo(NULL, m_DlgTagFetcher, m_DlgCoverArtFetcher);
     connect(m_pTrackInfo, SIGNAL(next()),
-            this, SLOT(slotNextTrackInfo()));
+            this, SLOT(slotNextTrack()));
     connect(m_pTrackInfo, SIGNAL(previous()),
-            this, SLOT(slotPrevTrackInfo()));
+            this, SLOT(slotPrevTrack()));
     connect(&m_DlgTagFetcher, SIGNAL(next()),
-            this, SLOT(slotNextDlgTagFetcher()));
+            this, SLOT(slotNextTrack()));
     connect(&m_DlgTagFetcher, SIGNAL(previous()),
-            this, SLOT(slotPrevDlgTagFetcher()));
+            this, SLOT(slotPrevTrack()));
     connect(&m_DlgCoverArtFetcher, SIGNAL(next()),
-            this, SLOT(slotNextDlgCoverArtFetcher()));
+            this, SLOT(slotNextTrack()));
     connect(&m_DlgCoverArtFetcher, SIGNAL(previous()),
-            this, SLOT(slotPrevDlgCoverArtFetcher()));
+            this, SLOT(slotPrevTrack()));
 
     connect(&m_loadTrackMapper, SIGNAL(mapped(QString)),
             this, SLOT(loadSelectionToGroup(QString)));
@@ -552,6 +552,30 @@ void WTrackTableView::slotShowTrackInfo() {
     }
 }
 
+void WTrackTableView::slotShowDlgTagFetcher() {
+    QModelIndexList indices = selectionModel()->selectedRows();
+
+    if (indices.size() > 0) {
+        showDlgTagFetcher(indices[0]);
+    }
+}
+
+void WTrackTableView::slotNextTrack() {
+    QModelIndex nextRow = currentTrackInfoIndex.sibling(
+        currentTrackInfoIndex.row()+1, currentTrackInfoIndex.column());
+    if (nextRow.isValid()) {
+        updateDlgs(nextRow);
+    }
+}
+
+void WTrackTableView::slotPrevTrack() {
+    QModelIndex prevRow = currentTrackInfoIndex.sibling(
+        currentTrackInfoIndex.row()-1, currentTrackInfoIndex.column());
+    if (prevRow.isValid()) {
+        updateDlgs(prevRow);
+    }
+}
+
 void WTrackTableView::updateDlgs(const QModelIndex& row) {
     if (m_pTrackInfo->isVisible()) {
         showTrackInfo(row);
@@ -561,22 +585,6 @@ void WTrackTableView::updateDlgs(const QModelIndex& row) {
     }
     if (m_DlgTagFetcher.isVisible()) {
         showDlgTagFetcher(row);
-    }
-}
-
-void WTrackTableView::slotNextTrackInfo() {
-    QModelIndex nextRow = currentTrackInfoIndex.sibling(
-        currentTrackInfoIndex.row()+1, currentTrackInfoIndex.column());
-    if (nextRow.isValid()) {
-        updateDlgs(nextRow);
-    }
-}
-
-void WTrackTableView::slotPrevTrackInfo() {
-    QModelIndex prevRow = currentTrackInfoIndex.sibling(
-        currentTrackInfoIndex.row()-1, currentTrackInfoIndex.column());
-    if (prevRow.isValid()) {
-        updateDlgs(prevRow);
     }
 }
 
@@ -602,22 +610,6 @@ void WTrackTableView::showTrackInfo(QModelIndex index) {
     m_pTrackInfo->show();
 }
 
-void WTrackTableView::slotNextDlgCoverArtFetcher() {
-    QModelIndex nextRow = currentTrackInfoIndex.sibling(
-        currentTrackInfoIndex.row()+1, currentTrackInfoIndex.column());
-    if (nextRow.isValid()) {
-        updateDlgs(nextRow);
-    }
-}
-
-void WTrackTableView::slotPrevDlgCoverArtFetcher() {
-    QModelIndex prevRow = currentTrackInfoIndex.sibling(
-        currentTrackInfoIndex.row()-1, currentTrackInfoIndex.column());
-    if (prevRow.isValid()) {
-        updateDlgs(prevRow);
-    }
-}
-
 void WTrackTableView::showDlgCoverArtFetcher(QModelIndex index) {
     TrackModel* trackModel = getTrackModel();
 
@@ -632,22 +624,6 @@ void WTrackTableView::showDlgCoverArtFetcher(QModelIndex index) {
     m_DlgCoverArtFetcher.show();
 }
 
-void WTrackTableView::slotNextDlgTagFetcher() {
-    QModelIndex nextRow = currentTrackInfoIndex.sibling(
-        currentTrackInfoIndex.row()+1, currentTrackInfoIndex.column());
-    if (nextRow.isValid()) {
-        updateDlgs(nextRow);
-    }
-}
-
-void WTrackTableView::slotPrevDlgTagFetcher() {
-    QModelIndex prevRow = currentTrackInfoIndex.sibling(
-        currentTrackInfoIndex.row()-1, currentTrackInfoIndex.column());
-    if (prevRow.isValid()) {
-        updateDlgs(prevRow);
-    }
-}
-
 void WTrackTableView::showDlgTagFetcher(QModelIndex index) {
     TrackModel* trackModel = getTrackModel();
 
@@ -660,14 +636,6 @@ void WTrackTableView::showDlgTagFetcher(QModelIndex index) {
     m_DlgTagFetcher.init(pTrack);
     currentTrackInfoIndex = index;
     m_DlgTagFetcher.show();
-}
-
-void WTrackTableView::slotShowDlgTagFetcher() {
-    QModelIndexList indices = selectionModel()->selectedRows();
-
-    if (indices.size() > 0) {
-        showDlgTagFetcher(indices[0]);
-    }
 }
 
 void WTrackTableView::contextMenuEvent(QContextMenuEvent* event) {
