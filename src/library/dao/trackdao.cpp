@@ -1246,6 +1246,32 @@ bool TrackDAO::updateCoverArt(int trackId, int coverId) {
     return true;
 }
 
+bool TrackDAO::updateCoverArt(QList<int> trackIds, QList<int> coverIds) {
+    if (trackIds.size() != coverIds.size() ||
+        trackIds.isEmpty() || coverIds.isEmpty()) {
+        return false;
+    }
+
+    QStringList idStringList;
+    QString sQuery = "UPDATE library SET cover_art = CASE id ";
+    for (int i=0; i<trackIds.size(); i++) {
+        sQuery = sQuery % QString("WHEN '%1' THEN '%2' ").arg(trackIds.at(i))
+                                                         .arg(coverIds.at(i));
+        idStringList.append(QString::number(trackIds.at(i)));
+    }
+    sQuery = sQuery % QString("END WHERE id IN (%1)").arg(idStringList.join(","));
+
+    QSqlQuery query(m_database);
+    if (!query.exec(sQuery)) {
+        LOG_FAILED_QUERY(query) << "couldn't update library.cover_art";
+        return false;
+    }
+
+    // we also need to update the cover_art column in the tablemodel.
+    emit(updateTracksInBTC(trackIds.toSet()));
+    return true;
+}
+
 // Mark all the tracks in the library as invalid.
 // That means we'll need to later check that those tracks actually
 // (still) exist as part of the library scanning procedure.

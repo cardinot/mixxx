@@ -3,6 +3,7 @@
 #include <QPixmap>
 #include <QStringBuilder>
 #include <QtConcurrentRun>
+#include <QTimer>
 
 #include "coverartcache.h"
 #include "soundsourceproxy.h"
@@ -11,7 +12,10 @@ CoverArtCache::CoverArtCache()
         : m_pCoverArtDAO(NULL),
           m_pTrackDAO(NULL),
           m_sDefaultCoverLocation(":/images/library/default_cover.png"),
-          m_defaultCover(m_sDefaultCoverLocation) {
+          m_defaultCover(m_sDefaultCoverLocation),
+          m_timer(new QTimer(this)) {
+    m_timer->setSingleShot(true);
+    connect(m_timer, SIGNAL(timeout()), SLOT(updateDB()));
 }
 
 CoverArtCache::~CoverArtCache() {
@@ -67,6 +71,12 @@ QPixmap CoverArtCache::requestPixmap(int trackId,
     // keep a list of trackIds for which a future is currently running
     // to avoid loading the same picture again while we are loading it
     if (m_runningIds.contains(trackId)) {
+        return QPixmap();
+    }
+
+    // check if we have already found a cover for this track
+    // and if it is just waiting to be inserted/updated in the DB.
+    if (m_queueOfUpdates.contains(trackId)) {
         return QPixmap();
     }
 
@@ -163,40 +173,45 @@ CoverArtCache::FutureResult CoverArtCache::searchImage(
                                            const bool emitSignals) {
     FutureResult res;
     res.trackId = coverInfo.trackId;
+    res.md5Hash = coverInfo.md5Hash;
     res.croppedImg = croppedPixmap;
     res.emitSignals = emitSignals;
+    res.newImgFound = false;
 
     // Looking for embedded cover art.
     //
     res.img = extractEmbeddedCover(coverInfo.trackLocation);
     if (!res.img.isNull()) {
-        // it is the first time that we are loading the embedded cover,
-        // so we need to recalculate the md5 hash.
+        res.img = rescaleBigImage(res.img);
         if (res.md5Hash.isEmpty()) {
+            // it is the first time that we are loading the embedded cover,
+            // so we need to recalculate the md5 hash.
             res.md5Hash = calculateMD5(res.img);
         }
-
-        if (res.croppedImg) {
-            res.img = cropImage(res.img);
-        } else {
-            res.img = rescaleBigImage(res.img);
-        }
-
-        return res;
+        res.newImgFound = true;
     }
 
     // Looking for cover stored in track diretory.
     //
-    res.coverLocation = searchInTrackDirectory(coverInfo.trackDirectory,
-                                               coverInfo.trackBaseName,
-                                               coverInfo.album);
+    if (!res.newImgFound) {
+        res.coverLocation = searchInTrackDirectory(coverInfo.trackDirectory,
+                                                   coverInfo.trackBaseName,
+                                                   coverInfo.album);
+        res.img = rescaleBigImage(QImage(res.coverLocation));
+        res.md5Hash = calculateMD5(res.img);
+        res.newImgFound = true;
+    }
 
-    res.img = QImage(res.coverLocation);
-    res.md5Hash = calculateMD5(res.img);
-    if (res.croppedImg) {
+    // adjusting the cover size according to the final purpose
+    if (res.newImgFound && res.croppedImg) {
         res.img = cropImage(res.img);
-    } else {
-        res.img = rescaleBigImage(res.img);
+    }
+
+    // check if this image is really a new one
+    // (different from the one that we have in db)
+    if (coverInfo.md5Hash == res.md5Hash)
+    {
+        res.newImgFound = false;
     }
 
     return res;
@@ -293,11 +308,33 @@ void CoverArtCache::imageFound() {
             }
         }
     }
+
     // update DB
-    int coverId = m_pCoverArtDAO->saveCoverArt(res.coverLocation, res.md5Hash);
-    m_pTrackDAO->updateCoverArt(res.trackId, coverId);
+    if (res.newImgFound && !m_queueOfUpdates.contains(res.trackId)) {
+        m_queueOfUpdates.insert(res.trackId,
+                                qMakePair(res.coverLocation, res.md5Hash));
+    }
+
+    if (m_queueOfUpdates.size() == 1 && !m_timer->isActive()) {
+        m_timer->start(500); // after 0.5s, it will call `updateDB()`
+    }
 
     m_runningIds.remove(res.trackId);
+}
+
+// sqlite can't do a huge number of updates in a very short time,
+// so it is important to collect all new covers and write them at once.
+void CoverArtCache::updateDB() {
+    if (m_queueOfUpdates.isEmpty()) {
+        return;
+    }
+
+    QList<int> coverIds = m_pCoverArtDAO->saveCoverArt(m_queueOfUpdates.values());
+
+    Q_ASSERT(m_queueOfUpdates.keys().size() == coverIds.size());
+    m_pTrackDAO->updateCoverArt(m_queueOfUpdates.keys(), coverIds);
+
+    m_queueOfUpdates.clear();
 }
 
 // It will return a cropped cover that is ready to be
@@ -325,7 +362,7 @@ QImage CoverArtCache::cropImage(QImage img) {
 // if it's too big, we have to scale it.
 // big images would be quickly removed from cover cache.
 QImage CoverArtCache::rescaleBigImage(QImage img) {
-    const int MAXSIZE = 400;
+    const int MAXSIZE = 300;
     QSize size = img.size();
     if (size.height() > MAXSIZE || size.width() > MAXSIZE) {
         return img.scaled(MAXSIZE, MAXSIZE,

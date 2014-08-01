@@ -2,19 +2,25 @@
 
 #include "library/coverartcache.h"
 #include "library/coverartdelegate.h"
-#include "library/trackmodel.h"
 #include "library/dao/trackdao.h"
 
 CoverArtDelegate::CoverArtDelegate(QObject *parent)
         : QStyledItemDelegate(parent),
           m_pTableView(NULL),
-          m_bIsLocked(false) {
+          m_pTrackModel(NULL),
+          m_bIsLocked(false),
+          m_sDefaultCover(CoverArtCache::instance()->getDefaultCoverLocation()),
+          m_iCoverLocationColumn(-1),
+          m_iMd5Column(-1) {
     // This assumes that the parent is wtracktableview
     connect(parent, SIGNAL(lockCoverArtDelegate(bool)),
             this, SLOT(slotLock(bool)));
 
     if (QTableView *tableView = qobject_cast<QTableView*>(parent)) {
         m_pTableView = tableView;
+        m_pTrackModel = dynamic_cast<TrackModel*>(m_pTableView->model());
+        m_iCoverLocationColumn = m_pTrackModel->fieldIndex(LIBRARYTABLE_COVERART_LOCATION);
+        m_iMd5Column = m_pTrackModel->fieldIndex(LIBRARYTABLE_COVERART_MD5);
     }
 }
 
@@ -28,45 +34,34 @@ void CoverArtDelegate::slotLock(bool lock) {
 void CoverArtDelegate::paint(QPainter *painter,
                              const QStyleOptionViewItem &option,
                              const QModelIndex &index) const {
-    painter->save();
-
-    // Populate the correct colors based on the styling
-    QStyleOptionViewItem newOption = option;
-    initStyleOption(&newOption, index);
-
-    // Set the palette appropriately based on whether the row is selected or
-    // not. We also have to check if it is inactive or not and use the
-    // appropriate ColorGroup.
-    if (newOption.state & QStyle::State_Selected) {
-        QPalette::ColorGroup colorGroup =
-                newOption.state & QStyle::State_Active ?
-                QPalette::Active : QPalette::Inactive;
-        painter->fillRect(newOption.rect,
-            newOption.palette.color(colorGroup, QPalette::Highlight));
-        painter->setBrush(newOption.palette.color(
-            colorGroup, QPalette::HighlightedText));
-    } else {
-        painter->fillRect(newOption.rect, newOption.palette.base());
+    if (option.state & QStyle::State_Selected) {
+        painter->fillRect(option.rect, option.palette.highlight());
     }
 
-    TrackModel* trackModel = dynamic_cast<TrackModel*>(m_pTableView->model());
-    if (!trackModel) {
+    if (!m_pTrackModel || m_iCoverLocationColumn == -1 || m_iMd5Column == -1) {
         return;
     }
 
-    QString defaultLoc = CoverArtCache::instance()->getDefaultCoverLocation();
-    QString coverLocation = index.sibling(index.row(), trackModel->fieldIndex(
-                            LIBRARYTABLE_COVERART_LOCATION)).data().toString();
-    QString md5Hash = index.sibling(index.row(), trackModel->fieldIndex(
-                        LIBRARYTABLE_COVERART_MD5)).data().toString();
-    int trackId = trackModel->getTrackId(index);
-    QPixmap pixmap;
-    if (coverLocation != defaultLoc) { // draw cover_art
+    int trackId = m_pTrackModel->getTrackId(index);
+    if (trackId < 1) {
+        return;
+    }
+
+    QString coverLocation = index.sibling(index.row(),
+                                          m_iCoverLocationColumn
+                                          ).data().toString();
+
+    if (coverLocation != m_sDefaultCover) { // draw cover_art
+
+        QString md5Hash = index.sibling(index.row(),
+                                        m_iMd5Column
+                                        ).data().toString();
+
         // If the CoverDelegate is locked, it must not try
         // to load (from coverLocation) and search covers.
         // It means that in this cases it will just draw
         // covers which are already in the pixmapcache.
-        pixmap = CoverArtCache::instance()->requestPixmap(
+        QPixmap pixmap = CoverArtCache::instance()->requestPixmap(
                                             trackId, coverLocation, md5Hash,
                                             !m_bIsLocked, true, false);
 
@@ -87,6 +82,4 @@ void CoverArtDelegate::paint(QPainter *painter,
             painter->drawPixmap(target, pixmap, source);
         }
     }
-
-    painter->restore();
 }

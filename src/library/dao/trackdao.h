@@ -116,6 +116,7 @@ class TrackDAO : public QObject, public virtual DAO {
 
     // it will update the Library.cover_art column in DB
     bool updateCoverArt(int trackId, int coverId);
+    bool updateCoverArt(QList<int> trackIds, QList<int> coverIds);
 
   signals:
     void trackDirty(int trackId);
@@ -126,6 +127,7 @@ class TrackDAO : public QObject, public virtual DAO {
     void dbTrackAdded(TrackPointer pTrack);
     void progressVerifyTracksOutside(QString path);
     void updateTrackInBTC(int trackId);
+    void updateTracksInBTC(QSet<int> trackIds);
 
   public slots:
     // The public interface to the TrackDAO requires a TrackPointer so that we
