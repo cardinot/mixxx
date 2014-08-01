@@ -53,6 +53,7 @@ class WTrackTableView : public WLibraryTableView {
     void slotHide();
     void slotOpenInFileBrowser();
     void slotShowTrackInfo();
+    void slotShowDlgCoverArtFetcher();
     void slotShowDlgTagFetcher();
     void slotNextTrack();
     void slotPrevTrack();
@@ -113,6 +114,9 @@ class WTrackTableView : public WLibraryTableView {
     // Context menu machinery
     QMenu *m_pMenu, *m_pPlaylistMenu, *m_pCrateMenu, *m_pSamplerMenu, *m_pBPMMenu;
     QSignalMapper m_playlistMapper, m_crateMapper, m_deckMapper, m_samplerMapper;
+
+    // Search Cover Art from Internet Action:
+    QAction *m_pSearchCoverFromInternetAct;
 
     // Reload Track Metadata Action:
     QAction *m_pReloadMetadataAct;

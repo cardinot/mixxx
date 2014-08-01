@@ -108,6 +108,7 @@ WTrackTableView::~WTrackTableView() {
         pHeader->saveHeaderState();
     }
 
+    delete m_pSearchCoverFromInternetAct;
     delete m_pReloadMetadataAct;
     delete m_pReloadMetadataFromMusicBrainzAct;
     delete m_pAddToPreviewDeck;
@@ -384,6 +385,10 @@ void WTrackTableView::createActions() {
     connect(m_pReloadMetadataFromMusicBrainzAct, SIGNAL(triggered()),
             this, SLOT(slotShowDlgTagFetcher()));
 
+    m_pSearchCoverFromInternetAct = new QAction(tr("Search Cover Art from Internet"),this);
+    connect(m_pSearchCoverFromInternetAct, SIGNAL(triggered()),
+            this, SLOT(slotShowDlgCoverArtFetcher()));
+
     m_pAddToPreviewDeck = new QAction(tr("Load to Preview Deck"), this);
     // currently there is only one preview deck so just map it here.
     QString previewDeckGroup = PlayerManager::groupForPreviewDeck(0);
@@ -549,6 +554,14 @@ void WTrackTableView::slotShowTrackInfo() {
 
     if (indices.size() > 0) {
         showTrackInfo(indices[0]);
+    }
+}
+
+void WTrackTableView::slotShowDlgCoverArtFetcher() {
+    QModelIndexList indices = selectionModel()->selectedRows();
+
+    if (indices.size() > 0) {
+        showDlgCoverArtFetcher(indices[0]);
     }
 }
 
@@ -848,6 +861,8 @@ void WTrackTableView::contextMenuEvent(QContextMenuEvent* event) {
         m_pMenu->addAction(m_pReloadMetadataAct);
         m_pReloadMetadataFromMusicBrainzAct->setEnabled(oneSongSelected);
         m_pMenu->addAction(m_pReloadMetadataFromMusicBrainzAct);
+        m_pSearchCoverFromInternetAct->setEnabled(oneSongSelected);
+        m_pMenu->addAction(m_pSearchCoverFromInternetAct);
     }
     // REMOVE and HIDE should not be at the first menu position to avoid accidental clicks
     m_pMenu->addSeparator();
