@@ -14,6 +14,8 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
 
     connect(btnSearch, SIGNAL(clicked()),
             this, SLOT(slotSearch()));
+    connect(btnApply, SIGNAL(clicked()),
+            this, SLOT(slotApply()));
     connect(btnClose, SIGNAL(clicked()),
             this, SLOT(slotClose()));
     connect(btnPrev, SIGNAL(clicked()),
@@ -232,4 +234,8 @@ void DlgCoverArtFetcher::showResults() {
             index++;
         }
     }
+}
+
+void DlgCoverArtFetcher::slotApply() {
+    // TODO
 }
