@@ -83,6 +83,7 @@ void DlgTrackInfo::init(){
     //
     // search cover art from the internet
     QAction* searchCover = new QAction(
+                QIcon(":/images/library/ic_cover_search.png"),
                 tr("&Search"), this);
     connect(searchCover, SIGNAL(triggered()),
             this, SLOT(fetchCover()));
