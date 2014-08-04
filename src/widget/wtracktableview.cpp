@@ -29,7 +29,9 @@ WTrackTableView::WTrackTableView(QWidget * parent,
           m_pTrackCollection(pTrackCollection),
           m_DlgCoverArtFetcher(NULL),
           m_DlgTagFetcher(NULL),
-          m_sorting(sorting) {
+          m_sorting(sorting),
+          m_iCoverLocationColumn(-1),
+          m_iMd5Column(-1) {
     // Give a NULL parent because otherwise it inherits our style which can make
     // it unreadable. Bug #673411
     m_pTrackInfo = new DlgTrackInfo(NULL, m_DlgTagFetcher, m_DlgCoverArtFetcher);
@@ -177,6 +179,10 @@ void WTrackTableView::slotGuiTickTime(double cpuTime) {
 }
 
 void WTrackTableView::slotLoadCoverArt() {
+    if (m_iCoverLocationColumn < 0 || m_iMd5Column < 0) {
+        return;
+    }
+
     QString coverLocation;
     QString md5Hash;
     int trackId = 0;
@@ -185,11 +191,10 @@ void WTrackTableView::slotLoadCoverArt() {
         QModelIndex idx = indices[0];
         TrackModel* trackModel = getTrackModel();
         if (trackModel) {
-            coverLocation = idx.sibling(idx.row(), trackModel->fieldIndex(
-                            LIBRARYTABLE_COVERART_LOCATION)).data().toString();
-            md5Hash = idx.sibling(idx.row(), trackModel->fieldIndex(
-                            LIBRARYTABLE_COVERART_MD5)).data().toString();
+            md5Hash = idx.sibling(idx.row(), m_iMd5Column).data().toString();
             trackId = trackModel->getTrackId(idx);
+            coverLocation = idx.sibling(idx.row(),
+                                m_iCoverLocationColumn).data().toString();
         }
     }
     emit(loadCoverArt(coverLocation, md5Hash, trackId));
@@ -216,6 +221,13 @@ void WTrackTableView::loadTrackModel(QAbstractItemModel *model) {
         doSortByColumn(horizontalHeader()->sortIndicatorSection());
         return;
     }
+
+    // The "coverLocation" and "md5" column numbers are very often required
+    // by slotLoadCoverArt(). As this value will not change when the model
+    // still the same, we must avoid doing hundreds of "fieldIndex" calls
+    // when it is completely unnecessary...
+    m_iCoverLocationColumn = track_model->fieldIndex(LIBRARYTABLE_COVERART_LOCATION);
+    m_iMd5Column = track_model->fieldIndex(LIBRARYTABLE_COVERART_MD5);
 
     setVisible(false);
 
