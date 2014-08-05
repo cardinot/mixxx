@@ -54,13 +54,31 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
     }
 }
 
+void DlgCoverArtFetcher::setStatus(Status status) {
+    QString txt;
+    switch (status) {
+        case READY:
+            txt = tr("ready!");
+            break;
+        case NOTFOUND:
+            txt = tr("No images were found!");
+            break;
+        case SEARCHING:
+            txt = tr("searching...");
+            break;
+    }
+    txtStatus->setText(txt);
+}
+
 void DlgCoverArtFetcher::setStatusOfSearchBtn(bool isSearching) {
     btnSearch->setChecked(isSearching);
     if (isSearching) {
+        setStatus(SEARCHING);
         btnSearch->setText("Abort");
         txtArtist->setEnabled(false);
         txtAlbum->setEnabled(false);
     } else {
+        setStatus(READY);
         btnSearch->setText("Search");
         txtArtist->setEnabled(true);
         txtAlbum->setEnabled(true);

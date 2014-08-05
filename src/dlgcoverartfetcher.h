@@ -30,6 +30,12 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     void slotSearchFinished();
 
   private:
+    enum Status {
+        READY,
+        NOTFOUND,
+        SEARCHING
+    };
+
     struct SearchResult {
       QString artist;
       QString album;
@@ -44,6 +50,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     QList<QUrl> m_downloadQueue;
     QList<SearchResult> m_searchresults;
 
+    void setStatus(Status status);
     void abortSearch();
     void setStatusOfSearchBtn(bool isSearching);
     void downloadNextCover();
