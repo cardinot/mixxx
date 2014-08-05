@@ -1,6 +1,7 @@
 #include <QStandardItemModel>
 #include <QStringBuilder>
 #include <QtDebug>
+#include <QToolButton>
 
 #include "dlgcoverartfetcher.h"
 
@@ -35,7 +36,7 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
 }
 
 DlgCoverArtFetcher::~DlgCoverArtFetcher() {
-    qDebug() << "~DlgCoverArtDownload()";
+    qDebug() << "~DlgCoverArtFetcher()";
 }
 
 void DlgCoverArtFetcher::init(const TrackPointer track) {
@@ -87,6 +88,7 @@ void DlgCoverArtFetcher::slotSearch() {
         coverView->setModel(NULL);
         setStatusOfSearchBtn(true);
 
+        // Last.fm
         QUrl url;
         url.setScheme("http");
         url.setHost("ws.audioscrobbler.com");
@@ -94,7 +96,6 @@ void DlgCoverArtFetcher::slotSearch() {
         url.addQueryItem("method", "album.search");
         url.addQueryItem("album", txtAlbum->text() % " " % txtArtist->text());
         url.addQueryItem("api_key", APIKEY_LASTFM);
-
         m_pLastSearchReply = m_pNetworkManager->get(QNetworkRequest(url));
         connect(m_pLastSearchReply, SIGNAL(finished()),
                 this, SLOT(slotSearchFinished()));
@@ -219,18 +220,24 @@ void DlgCoverArtFetcher::showResults() {
 
     int index = 0;
     for (int row=0; row<ROWCOUNT; row++) {
-        coverView->setRowHeight(row, 100);
+        coverView->setRowHeight(row, 130);
         for (int column=0; column<COLUMNCOUNT; column++) {
             if (index >= m_searchresults.size()) {
                 setStatusOfSearchBtn(false);
                 return;
             }
 
-            QPushButton* btn = new QPushButton("");
-            btn->setFlat(true);
-            btn->setIcon(m_searchresults.at(index).cover);
-            btn->setIconSize(QSize(100,100));
-            coverView->setIndexWidget(coverView->model()->index(row, column), btn);
+            QString title = m_searchresults.at(index).album % " - " %
+                            m_searchresults.at(index).artist;
+
+            QToolButton* button = new QToolButton(this);
+            button->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+            button->setAutoRaise(true);
+            button->setIcon(m_searchresults.at(index).cover);
+            button->setIconSize(QSize(100,100));
+            button->setText(title);
+
+            coverView->setIndexWidget(coverView->model()->index(row, column), button);
             index++;
         }
     }
