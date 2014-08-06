@@ -52,6 +52,9 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     QList<QUrl> m_downloadQueue;
     QList<SearchResult> m_searchresults;
 
+    const QSize m_kCellSize;
+    const QSize m_kCoverSize;
+
     void setStatus(Status status);
     void abortSearch();
     void setStatusOfSearchBtn(bool isSearching);

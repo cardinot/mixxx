@@ -10,7 +10,9 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
           m_model(NULL),
           m_pNetworkManager(new QNetworkAccessManager(this)),
           m_pLastDownloadReply(NULL),
-          m_pLastSearchReply(NULL) {
+          m_pLastSearchReply(NULL),
+          m_kCellSize(100, 150),
+          m_kCoverSize(100, 100) {
     setupUi(this);
 
     connect(btnSearch, SIGNAL(clicked()),
@@ -227,11 +229,8 @@ void DlgCoverArtFetcher::showResult(SearchResult res) {
     button->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     button->setAutoRaise(true);
     button->setIcon(res.cover);
-    button->setIconSize(QSize(100,100));
+    button->setIconSize(m_kCoverSize);
     button->setText(title);
-
-    int cellWidth = 100;
-    int cellHeight = 150;
 
     bool newRow;
     int row, column;
@@ -244,18 +243,16 @@ void DlgCoverArtFetcher::showResult(SearchResult res) {
     }
 
     coverView->setModel(m_model);
-    coverView->setColumnWidth(column, cellWidth);
-    coverView->setRowHeight(row, cellHeight);
+    coverView->setColumnWidth(column, m_kCellSize.width());
+    coverView->setRowHeight(row, m_kCellSize.height());
 
     coverView->setIndexWidget(coverView->model()->index(row, column), button);
 }
 
 void DlgCoverArtFetcher::getNextPosition(bool& newRow, int& row, int& column) {
-    int cellWidth = 100;
-
     int columnCount = m_model->columnCount();
     int rowCount = m_model->rowCount();
-    int maxColumnCount = (float) coverView->size().width() / cellWidth;
+    int maxColumnCount = (float) coverView->size().width() / m_kCellSize.width();
 
     bool found = false;
     if (columnCount * rowCount == 0) { // first result
