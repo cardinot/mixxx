@@ -74,12 +74,12 @@ void DlgCoverArtFetcher::setStatusOfSearchBtn(bool isSearching) {
     btnSearch->setChecked(isSearching);
     if (isSearching) {
         setStatus(SEARCHING);
-        btnSearch->setText("Abort");
+        btnSearch->setText(tr("Abort"));
         txtArtist->setEnabled(false);
         txtAlbum->setEnabled(false);
     } else {
         setStatus(READY);
-        btnSearch->setText("Search");
+        btnSearch->setText(tr("Search"));
         txtArtist->setEnabled(true);
         txtAlbum->setEnabled(true);
     }
