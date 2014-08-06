@@ -1,4 +1,3 @@
-#include <QStandardItemModel>
 #include <QStringBuilder>
 #include <QtDebug>
 #include <QToolButton>
@@ -8,6 +7,7 @@
 DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
         : QDialog(parent),
           m_track(NULL),
+          m_model(NULL),
           m_pNetworkManager(new QNetworkAccessManager(this)),
           m_pLastDownloadReply(NULL),
           m_pLastSearchReply(NULL) {
@@ -26,7 +26,6 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
 
     btnSearch->setCheckable(true);
 
-    coverView->horizontalHeader()->setStretchLastSection(true);
     coverView->horizontalHeader()->setVisible(false);
     coverView->verticalHeader()->setVisible(false);
     coverView->setAlternatingRowColors(false);
@@ -43,7 +42,8 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
     abortSearch();
     m_downloadQueue.clear();
     m_searchresults.clear();
-    coverView->setModel(NULL);
+    m_model = new QStandardItemModel(this);
+    coverView->setModel(m_model);
     setStatusOfSearchBtn(false);
 
     if (track->getAlbum().isEmpty() && track->getArtist().isEmpty()) {
@@ -103,7 +103,8 @@ void DlgCoverArtFetcher::slotClose() {
 
 void DlgCoverArtFetcher::slotSearch() {
     if (btnSearch->isChecked()) {
-        coverView->setModel(NULL);
+        m_model = new QStandardItemModel(this);
+        coverView->setModel(m_model);
         setStatusOfSearchBtn(true);
 
         // Last.fm
@@ -183,7 +184,7 @@ void DlgCoverArtFetcher::parseAlbum(QXmlStreamReader& xml, QString& album,
 
 void DlgCoverArtFetcher::downloadNextCover() {
     if (m_downloadQueue.isEmpty()) {
-        showResults();
+        setStatusOfSearchBtn(false);
         return;
     }
 
@@ -208,6 +209,7 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
     QPixmap pixmap;
     if (pixmap.loadFromData(m_pLastDownloadReply->readAll())) {
         m_searchresults.first().cover = pixmap;
+        showResult(m_searchresults.first());
         m_searchresults.move(0, m_searchresults.size() - 1);
     } else {
         m_searchresults.removeFirst();
@@ -218,41 +220,70 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
     downloadNextCover();
 }
 
-void DlgCoverArtFetcher::showResults() {
-    if (m_searchresults.isEmpty()) {
-        coverView->setModel(NULL);
-        setStatusOfSearchBtn(false);
-        return;
+void DlgCoverArtFetcher::showResult(SearchResult res) {
+    QString title = res.album % " - " % res.artist;
+
+    QToolButton* button = new QToolButton(this);
+    button->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    button->setAutoRaise(true);
+    button->setIcon(res.cover);
+    button->setIconSize(QSize(100,100));
+    button->setText(title);
+
+    int cellWidth = 100;
+    int cellHeight = 150;
+
+    bool newRow;
+    int row, column;
+    getNextPosition(newRow, row, column);
+
+    if (newRow) {
+        m_model->insertRow(row, new QStandardItem(""));
+    } else {
+        m_model->setItem(row, column, new QStandardItem(""));
     }
 
-    // TODO: The whole COVERVIEW must be improved!
-    //       it is just a sketch to make us able to test the downloads.
-    const int COLUMNCOUNT = 5;
-    const int ROWCOUNT = m_searchresults.size() / COLUMNCOUNT + 1;
-    QStandardItemModel* model = new QStandardItemModel(ROWCOUNT, COLUMNCOUNT, this);
-    coverView->setModel(model);
+    coverView->setModel(m_model);
+    coverView->setColumnWidth(column, cellWidth);
+    coverView->setRowHeight(row, cellHeight);
 
-    int index = 0;
-    for (int row=0; row<ROWCOUNT; row++) {
-        coverView->setRowHeight(row, 130);
-        for (int column=0; column<COLUMNCOUNT; column++) {
-            if (index >= m_searchresults.size()) {
-                setStatusOfSearchBtn(false);
-                return;
+    coverView->setIndexWidget(coverView->model()->index(row, column), button);
+}
+
+void DlgCoverArtFetcher::getNextPosition(bool& newRow, int& row, int& column) {
+    int cellWidth = 100;
+
+    int columnCount = m_model->columnCount();
+    int rowCount = m_model->rowCount();
+    int maxColumnCount = (float) coverView->size().width() / cellWidth;
+
+    bool found = false;
+    if (columnCount * rowCount == 0) { // first result
+        newRow = true;
+        column = 0;
+        row = 0;
+        found = true;
+    }
+
+    for (int r = 0; r < rowCount && !found; r++) {
+        for (int c = 0; c < columnCount && !found; c++) {
+            if (m_model->data(m_model->index(r, c)).isNull()) {
+                newRow = false;
+                row = r;
+                column = c;
+                found = true;
             }
+        }
+    }
 
-            QString title = m_searchresults.at(index).album % " - " %
-                            m_searchresults.at(index).artist;
-
-            QToolButton* button = new QToolButton(this);
-            button->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-            button->setAutoRaise(true);
-            button->setIcon(m_searchresults.at(index).cover);
-            button->setIconSize(QSize(100,100));
-            button->setText(title);
-
-            coverView->setIndexWidget(coverView->model()->index(row, column), button);
-            index++;
+    if (!found) {
+        if (columnCount < maxColumnCount) {
+            m_model->setColumnCount(columnCount + 1);
+            getNextPosition(newRow, row, column);
+        } else {
+            newRow = true;
+            column = 0;
+            row = rowCount;
         }
     }
 }

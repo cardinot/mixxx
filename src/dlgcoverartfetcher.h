@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QNetworkReply>
+#include <QStandardItemModel>
 #include <QXmlStreamReader>
 
 #include "trackinfoobject.h"
@@ -43,6 +44,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     };
 
     TrackPointer m_track;
+    QStandardItemModel* m_model;
     QNetworkAccessManager* m_pNetworkManager;
     QNetworkReply* m_pLastDownloadReply;
     QNetworkReply* m_pLastSearchReply;
@@ -54,7 +56,8 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     void abortSearch();
     void setStatusOfSearchBtn(bool isSearching);
     void downloadNextCover();
-    void showResults();
+    void showResult(SearchResult res);
+    void getNextPosition(bool& newRow, int& row, int& column);
     void parseAlbum(QXmlStreamReader& xml, QString& album,
                     QString& artist, QUrl& url) const;
 };
