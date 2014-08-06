@@ -149,8 +149,6 @@ void DlgCoverArtFetcher::slotSearchFinished() {
         }
     }
 
-    Q_ASSERT(m_downloadQueue.size() == m_searchresults.size());
-
     m_pLastSearchReply->deleteLater();
     m_pLastSearchReply = NULL;
     downloadNextCover();
@@ -206,8 +204,6 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
         downloadNextCover();
         return;
     }
-
-    Q_ASSERT(m_searchresults.first().cover.isNull());
 
     QPixmap pixmap;
     if (pixmap.loadFromData(m_pLastDownloadReply->readAll())) {
