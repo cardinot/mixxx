@@ -19,6 +19,9 @@ CoverArtDelegate::CoverArtDelegate(QObject *parent)
     if (QTableView *tableView = qobject_cast<QTableView*>(parent)) {
         m_pTableView = tableView;
         m_pTrackModel = dynamic_cast<TrackModel*>(m_pTableView->model());
+    }
+
+    if (m_pTrackModel) {
         m_iMd5Column = m_pTrackModel->fieldIndex(LIBRARYTABLE_COVERART_MD5);
         m_iCoverLocationColumn = m_pTrackModel->fieldIndex(
                                     LIBRARYTABLE_COVERART_LOCATION);
@@ -67,7 +70,7 @@ void CoverArtDelegate::paint(QPainter *painter,
         // covers which are already in the pixmapcache.
         QPixmap pixmap = CoverArtCache::instance()->requestPixmap(
                                             trackId, coverLocation, md5Hash,
-                                            !m_bIsLocked, true, false);
+                                            !m_bIsLocked, true, true);
 
         if (!pixmap.isNull()) {
             // It already got a cropped pixmap (from covercache)

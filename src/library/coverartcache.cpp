@@ -35,7 +35,7 @@ bool CoverArtCache::changeCoverArt(int trackId,
         return false;
     }
 
-    QImage img(newCoverLocation);
+    QImage img = rescaleBigImage(QImage(newCoverLocation));
     QString md5Hash = calculateMD5(img);
     if (md5Hash.isEmpty()) {
         return false;
@@ -63,7 +63,7 @@ QPixmap CoverArtCache::requestPixmap(int trackId,
                                      const QString& md5Hash,
                                      const bool tryLoadAndSearch,
                                      const bool croppedPixmap,
-                                     const bool emitSignals) {
+                                     const bool issueRepaint) {
     if (trackId < 1) {
         return QPixmap();
     }
@@ -89,7 +89,7 @@ QPixmap CoverArtCache::requestPixmap(int trackId,
 
     QPixmap pixmap;
     if (QPixmapCache::find(cacheKey, &pixmap)) {
-        if (emitSignals) {
+        if (!issueRepaint) {
             emit(pixmapFound(trackId, pixmap));
         }
         return pixmap;
@@ -105,12 +105,12 @@ QPixmap CoverArtCache::requestPixmap(int trackId,
         CoverArtDAO::CoverArtInfo coverInfo;
         coverInfo = m_pCoverArtDAO->getCoverArtInfo(trackId);
         future = QtConcurrent::run(this, &CoverArtCache::searchImage,
-                                   coverInfo, croppedPixmap, emitSignals);
+                                   coverInfo, croppedPixmap, issueRepaint);
         connect(watcher, SIGNAL(finished()), this, SLOT(imageFound()));
     } else {
         future = QtConcurrent::run(this, &CoverArtCache::loadImage,
                                    trackId, coverLocation, md5Hash,
-                                   croppedPixmap, emitSignals);
+                                   croppedPixmap, issueRepaint);
         connect(watcher, SIGNAL(finished()), this, SLOT(imageLoaded()));
     }
     m_runningIds.insert(trackId);
@@ -125,14 +125,15 @@ CoverArtCache::FutureResult CoverArtCache::loadImage(int trackId,
                                                      const QString& coverLocation,
                                                      const QString& md5Hash,
                                                      const bool croppedPixmap,
-                                                     const bool emitSignals) {
+                                                     const bool issueRepaint) {
     FutureResult res;
     res.trackId = trackId;
     res.coverLocation = coverLocation;
     res.img = QImage(coverLocation);
     res.md5Hash = md5Hash;
     res.croppedImg = croppedPixmap;
-    res.emitSignals = emitSignals;
+    res.issueRepaint = issueRepaint;
+    res.newImgFound = true;
 
     if (res.croppedImg) {
         res.img = cropImage(res.img);
@@ -151,12 +152,14 @@ void CoverArtCache::imageLoaded() {
 
     QPixmap pixmap;
     QString cacheKey = res.croppedImg ? res.md5Hash % "_cropped" : res.md5Hash;
-    if (QPixmapCache::find(cacheKey, &pixmap) && res.emitSignals) {
+    if (QPixmapCache::find(cacheKey, &pixmap) && !res.issueRepaint) {
         emit(pixmapFound(res.trackId, pixmap));
     } else if (!res.img.isNull()) {
         pixmap.convertFromImage(res.img);
         if (QPixmapCache::insert(cacheKey, pixmap)) {
-            if (res.emitSignals) {
+            if (res.issueRepaint) {
+                emit(requestRepaint());
+            } else {
                 emit(pixmapFound(res.trackId, pixmap));
             }
         }
@@ -170,12 +173,12 @@ void CoverArtCache::imageLoaded() {
 CoverArtCache::FutureResult CoverArtCache::searchImage(
                                            CoverArtDAO::CoverArtInfo coverInfo,
                                            const bool croppedPixmap,
-                                           const bool emitSignals) {
+                                           const bool issueRepaint) {
     FutureResult res;
     res.trackId = coverInfo.trackId;
     res.md5Hash = coverInfo.md5Hash;
     res.croppedImg = croppedPixmap;
-    res.emitSignals = emitSignals;
+    res.issueRepaint = issueRepaint;
     res.newImgFound = false;
 
     // Looking for embedded cover art.
@@ -298,12 +301,14 @@ void CoverArtCache::imageFound() {
 
     QPixmap pixmap;
     QString cacheKey = res.croppedImg ? res.md5Hash % "_cropped" : res.md5Hash;
-    if (QPixmapCache::find(cacheKey, &pixmap) && res.emitSignals) {
+    if (QPixmapCache::find(cacheKey, &pixmap) && !res.issueRepaint) {
         emit(pixmapFound(res.trackId, pixmap));
     } else if (!res.img.isNull()) {
         pixmap.convertFromImage(res.img);
         if (QPixmapCache::insert(cacheKey, pixmap)) {
-            if (res.emitSignals) {
+            if (res.issueRepaint) {
+                emit(requestRepaint());
+            } else {
                 emit(pixmapFound(res.trackId, pixmap));
             }
         }
@@ -349,20 +354,20 @@ QImage CoverArtCache::cropImage(QImage img) {
     // it defines the maximum width of the covers displayed
     // in the cover art column (tableviews).
     // (if you want to increase it - you have to change JUST it.)
-    const int WIDTH = 100;
-    const int CELL_HEIGHT = 20;
+    const int kWidth = 100;
+    const int kCellHeight = 20;
 
-    img = img.scaledToWidth(WIDTH, Qt::SmoothTransformation);
-    return img.copy(0, 0, img.width(), CELL_HEIGHT);
+    img = img.scaledToWidth(kWidth, Qt::SmoothTransformation);
+    return img.copy(0, 0, img.width(), kCellHeight);
 }
 
 // if it's too big, we have to scale it.
 // big images would be quickly removed from cover cache.
 QImage CoverArtCache::rescaleBigImage(QImage img) {
-    const int MAXSIZE = 300;
+    const int kMaxSize = 300;
     QSize size = img.size();
-    if (size.height() > MAXSIZE || size.width() > MAXSIZE) {
-        return img.scaled(MAXSIZE, MAXSIZE,
+    if (size.height() > kMaxSize || size.width() > kMaxSize) {
+        return img.scaled(kMaxSize, kMaxSize,
                           Qt::KeepAspectRatio,
                           Qt::SmoothTransformation);
     } else {
