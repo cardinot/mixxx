@@ -91,10 +91,12 @@ void DlgCoverArtFetcher::abortSearch() {
     if (m_pLastSearchReply != NULL) {
         m_pLastSearchReply->abort();
         m_pLastSearchReply->deleteLater();
+        m_pLastSearchReply = NULL;
     }
     if (m_pLastDownloadReply != NULL) {
         m_pLastDownloadReply->abort();
         m_pLastDownloadReply->deleteLater();
+        m_pLastDownloadReply = NULL;
     }
 }
 
