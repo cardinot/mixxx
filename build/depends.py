@@ -557,8 +557,8 @@ class MixxxCore(Feature):
                    "dlgprefcrossfader.cpp",
                    "dlgtagfetcher.cpp",
                    "dlgtrackinfo.cpp",
-		   "dlgcoverartfetcher.cpp",
-		   "dlganalysis.cpp",
+                   "dlgcoverartfetcher.cpp",
+                   "dlganalysis.cpp",
                    "dlgautodj.cpp",
                    "dlghidden.cpp",
                    "dlgmissing.cpp",
@@ -975,7 +975,7 @@ class MixxxCore(Feature):
             'dlgrecording.ui',
             'dlgtagfetcher.ui',
             'dlgtrackinfo.ui',
-	    'dlgcoverartfetcher.ui',
+            'dlgcoverartfetcher.ui',
         ]
         map(Qt.uic(build), ui_files)
 
