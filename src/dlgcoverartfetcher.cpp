@@ -225,16 +225,16 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
 }
 
 void DlgCoverArtFetcher::showResult(SearchResult res) {
-    QToolButton* button = new QToolButton(this);
-    button->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    button->setAutoRaise(true);
-    button->setIcon(res.cover);
-    button->setIconSize(m_kCoverSize);
+    QToolButton* cell = new QToolButton(this);
+    cell->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    cell->setAutoRaise(true);
+    cell->setIcon(res.cover);
+    cell->setIconSize(m_kCoverSize);
 
     res.album.truncate(16);
     res.artist.truncate(16);
-    button->setText(res.album % "\n" % res.artist);
-    button->setStyleSheet("font: 7pt 'Sans Serif'");
+    cell->setText(res.album % "\n" % res.artist);
+    cell->setStyleSheet("font: 7pt 'Sans Serif'");
 
     bool newRow;
     int row, column;
@@ -250,7 +250,7 @@ void DlgCoverArtFetcher::showResult(SearchResult res) {
     coverView->setColumnWidth(column, m_kCellSize.width());
     coverView->setRowHeight(row, m_kCellSize.height());
 
-    coverView->setIndexWidget(coverView->model()->index(row, column), button);
+    coverView->setIndexWidget(coverView->model()->index(row, column), cell);
 }
 
 void DlgCoverArtFetcher::getNextPosition(bool& newRow, int& row, int& column) {
