@@ -60,7 +60,6 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     void initCoverView();
     void setStatus(Status status);
     void abortSearch();
-    void setStatusOfSearchBtn(bool isSearching);
     void downloadNextCover();
     void showResult(SearchResult res);
     void getNextPosition(bool& newRow, int& row, int& column);

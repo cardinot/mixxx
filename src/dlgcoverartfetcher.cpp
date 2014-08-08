@@ -43,7 +43,6 @@ DlgCoverArtFetcher::~DlgCoverArtFetcher() {
 void DlgCoverArtFetcher::init(const TrackPointer track) {
     abortSearch();
     initCoverView();
-    setStatusOfSearchBtn(false);
 
     if (track->getAlbum().isEmpty() && track->getArtist().isEmpty()) {
         txtAlbum->setText(track->getTitle());
@@ -65,34 +64,27 @@ void DlgCoverArtFetcher::initCoverView() {
 }
 
 void DlgCoverArtFetcher::setStatus(Status status) {
-    QString txt;
+    QString statusText;
+    QString btnText = tr("Search");
+    bool enableFields = true;
     switch (status) {
         case READY:
-            txt = tr("ready!");
+            statusText = tr("ready!");
             break;
         case NOTFOUND:
-            txt = tr("No images were found!");
+            statusText = tr("No images were found!");
             break;
         case SEARCHING:
-            txt = tr("searching...");
+            statusText = tr("searching...");
+            btnText = tr("Abort");
+            enableFields = false;
             break;
     }
-    txtStatus->setText(txt);
-}
-
-void DlgCoverArtFetcher::setStatusOfSearchBtn(bool isSearching) {
-    btnSearch->setChecked(isSearching);
-    if (isSearching) {
-        setStatus(SEARCHING);
-        btnSearch->setText(tr("Abort"));
-        txtArtist->setEnabled(false);
-        txtAlbum->setEnabled(false);
-    } else {
-        setStatus(READY);
-        btnSearch->setText(tr("Search"));
-        txtArtist->setEnabled(true);
-        txtAlbum->setEnabled(true);
-    }
+    txtStatus->setText(statusText);
+    btnSearch->setText(btnText);
+    btnSearch->setChecked(!enableFields);
+    txtArtist->setEnabled(enableFields);
+    txtAlbum->setEnabled(enableFields);
 }
 
 void DlgCoverArtFetcher::abortSearch() {
@@ -106,6 +98,7 @@ void DlgCoverArtFetcher::abortSearch() {
         m_pLastDownloadReply->deleteLater();
         m_pLastDownloadReply = NULL;
     }
+    setStatus(READY);
 }
 
 void DlgCoverArtFetcher::slotClose() {
@@ -114,32 +107,30 @@ void DlgCoverArtFetcher::slotClose() {
 }
 
 void DlgCoverArtFetcher::slotSearch() {
-    if (btnSearch->isChecked()) {
-        initCoverView();
-        setStatusOfSearchBtn(true);
-
-        // Last.fm
-        QUrl url;
-        url.setScheme("http");
-        url.setHost("ws.audioscrobbler.com");
-        url.setPath("/2.0/");
-        url.addQueryItem("method", "album.search");
-        url.addQueryItem("album", txtAlbum->text() % " " % txtArtist->text());
-        url.addQueryItem("api_key", APIKEY_LASTFM);
-        m_pLastSearchReply = m_pNetworkManager->get(QNetworkRequest(url));
-        connect(m_pLastSearchReply, SIGNAL(finished()),
-                this, SLOT(slotSearchFinished()));
-    } else {
+    if (!btnSearch->isChecked()) {
         abortSearch();
-        setStatusOfSearchBtn(false);
+        return;
     }
+
+    initCoverView();
+    setStatus(SEARCHING);
+
+    // Last.fm
+    QUrl url;
+    url.setScheme("http");
+    url.setHost("ws.audioscrobbler.com");
+    url.setPath("/2.0/");
+    url.addQueryItem("method", "album.search");
+    url.addQueryItem("album", txtAlbum->text() % " " % txtArtist->text());
+    url.addQueryItem("api_key", APIKEY_LASTFM);
+    m_pLastSearchReply = m_pNetworkManager->get(QNetworkRequest(url));
+    connect(m_pLastSearchReply, SIGNAL(finished()),
+            this, SLOT(slotSearchFinished()));
 }
 
 void DlgCoverArtFetcher::slotSearchFinished() {
     if (m_pLastSearchReply->error() != QNetworkReply::NoError) {
-        m_pLastSearchReply->deleteLater();
-        m_pLastSearchReply = NULL;
-        setStatusOfSearchBtn(false);
+        abortSearch();
         return;
     }
 
@@ -192,7 +183,7 @@ void DlgCoverArtFetcher::parseAlbum(QXmlStreamReader& xml, QString& album,
 
 void DlgCoverArtFetcher::downloadNextCover() {
     if (m_downloadQueue.isEmpty()) {
-        setStatusOfSearchBtn(false);
+        setStatus(READY);
         return;
     }
 
