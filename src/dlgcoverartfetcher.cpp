@@ -35,6 +35,10 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
     coverView->setSelectionMode(QAbstractItemView::NoSelection);
     coverView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     coverView->setShowGrid(false);
+
+    m_cells = new QButtonGroup(this);
+    connect(m_cells, SIGNAL(buttonClicked(QAbstractButton*)),
+            this, SLOT(slotApply(QAbstractButton*)));
 }
 
 DlgCoverArtFetcher::~DlgCoverArtFetcher() {
@@ -108,6 +112,11 @@ void DlgCoverArtFetcher::slotClose() {
 
 void DlgCoverArtFetcher::slotSearch() {
     if (btnSearch->isChecked()) {
+        delete m_cells;
+        m_cells = new QButtonGroup(this);
+        connect(m_cells, SIGNAL(buttonClicked(QAbstractButton*)),
+                this, SLOT(slotApply(QAbstractButton*)));
+
         m_model = new QStandardItemModel(this);
         coverView->setModel(m_model);
         setStatusOfSearchBtn(true);
@@ -232,6 +241,8 @@ void DlgCoverArtFetcher::showResult(SearchResult res) {
     cell->setIcon(res.cover);
     cell->setIconSize(m_kCoverSize);
 
+    m_cells->addButton(cell);
+
     res.album.truncate(16);
     res.artist.truncate(16);
     cell->setText(res.album % "\n" % res.artist);
@@ -290,6 +301,7 @@ void DlgCoverArtFetcher::getNextPosition(bool& newRow, int& row, int& column) {
     }
 }
 
-void DlgCoverArtFetcher::slotApply() {
-    // TODO
+void DlgCoverArtFetcher::slotApply(QAbstractButton* i) {
+    //TODO
+    //QPixmap cover = i->icon().pixmap(1000);
 }

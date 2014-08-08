@@ -1,6 +1,7 @@
 #ifndef DLGCOVERARTFETCHER_H
 #define DLGCOVERARTFETCHER_H
 
+#include <QButtonGroup>
 #include <QDialog>
 #include <QNetworkReply>
 #include <QStandardItemModel>
@@ -24,7 +25,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     void previous();
 
   private slots:
-    void slotApply();
+    void slotApply(QAbstractButton* i);
     void slotClose();
     void slotSearch();
     void slotDownloadFinished();
@@ -54,6 +55,8 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
 
     const QSize m_kCellSize;
     const QSize m_kCoverSize;
+
+    QButtonGroup* m_cells;
 
     void setStatus(Status status);
     void abortSearch();
