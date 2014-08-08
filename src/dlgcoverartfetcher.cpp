@@ -225,14 +225,15 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
 }
 
 void DlgCoverArtFetcher::showResult(SearchResult res) {
-    QString title = res.album % "\n" % res.artist;
-
     QToolButton* button = new QToolButton(this);
     button->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     button->setAutoRaise(true);
     button->setIcon(res.cover);
     button->setIconSize(m_kCoverSize);
-    button->setText(title);
+
+    res.album.truncate(16);
+    res.artist.truncate(16);
+    button->setText(res.album % "\n" % res.artist);
     button->setStyleSheet("font: 7pt 'Sans Serif'");
 
     bool newRow;
