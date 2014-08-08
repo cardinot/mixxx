@@ -7,9 +7,9 @@
 
 DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
         : QDialog(parent),
-          m_track(NULL),
-          m_cells(NULL),
-          m_model(NULL),
+          m_pTrack(NULL),
+          m_pCells(NULL),
+          m_pModel(NULL),
           m_pNetworkManager(new QNetworkAccessManager(this)),
           m_pLastDownloadReply(NULL),
           m_pLastSearchReply(NULL),
@@ -44,7 +44,7 @@ DlgCoverArtFetcher::~DlgCoverArtFetcher() {
 void DlgCoverArtFetcher::init(const TrackPointer track) {
     abortSearch();
     initCoverView();
-    m_track = track;
+    m_pTrack = track;
 
     if (track->getAlbum().isEmpty() && track->getArtist().isEmpty()) {
         txtAlbum->setText(track->getTitle());
@@ -56,11 +56,11 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
 
 void DlgCoverArtFetcher::initCoverView() {
     m_downloadQueue.clear();
-    m_model = new QStandardItemModel(this);
-    coverView->setModel(m_model);
-    delete m_cells;
-    m_cells = new QButtonGroup(this);
-    connect(m_cells, SIGNAL(buttonClicked(QAbstractButton*)),
+    m_pModel = new QStandardItemModel(this);
+    coverView->setModel(m_pModel);
+    delete m_pCells;
+    m_pCells = new QButtonGroup(this);
+    connect(m_pCells, SIGNAL(buttonClicked(QAbstractButton*)),
             this, SLOT(slotApply(QAbstractButton*)));
 }
 
@@ -214,7 +214,7 @@ void DlgCoverArtFetcher::showResult(SearchResult res, QPixmap pixmap) {
     cell->setIcon(pixmap);
     cell->setIconSize(m_kCoverSize);
 
-    m_cells->addButton(cell);
+    m_pCells->addButton(cell);
 
     res.album.truncate(16);
     res.artist.truncate(16);
@@ -226,12 +226,12 @@ void DlgCoverArtFetcher::showResult(SearchResult res, QPixmap pixmap) {
     getNextPosition(newRow, row, column);
 
     if (newRow) {
-        m_model->insertRow(row, new QStandardItem(""));
+        m_pModel->insertRow(row, new QStandardItem(""));
     } else {
-        m_model->setItem(row, column, new QStandardItem(""));
+        m_pModel->setItem(row, column, new QStandardItem(""));
     }
 
-    coverView->setModel(m_model);
+    coverView->setModel(m_pModel);
     coverView->setColumnWidth(column, m_kCellSize.width());
     coverView->setRowHeight(row, m_kCellSize.height());
 
@@ -239,8 +239,8 @@ void DlgCoverArtFetcher::showResult(SearchResult res, QPixmap pixmap) {
 }
 
 void DlgCoverArtFetcher::getNextPosition(bool& newRow, int& row, int& column) {
-    int columnCount = m_model->columnCount();
-    int rowCount = m_model->rowCount();
+    int columnCount = m_pModel->columnCount();
+    int rowCount = m_pModel->rowCount();
     int maxColumnCount = (float) coverView->size().width() / m_kCellSize.width();
 
     bool found = false;
@@ -253,7 +253,7 @@ void DlgCoverArtFetcher::getNextPosition(bool& newRow, int& row, int& column) {
 
     for (int r = 0; r < rowCount && !found; r++) {
         for (int c = 0; c < columnCount && !found; c++) {
-            if (m_model->data(m_model->index(r, c)).isNull()) {
+            if (m_pModel->data(m_pModel->index(r, c)).isNull()) {
                 newRow = false;
                 row = r;
                 column = c;
@@ -264,7 +264,7 @@ void DlgCoverArtFetcher::getNextPosition(bool& newRow, int& row, int& column) {
 
     if (!found) {
         if (columnCount < maxColumnCount) {
-            m_model->setColumnCount(columnCount + 1);
+            m_pModel->setColumnCount(columnCount + 1);
             getNextPosition(newRow, row, column);
         } else {
             newRow = true;
@@ -275,11 +275,11 @@ void DlgCoverArtFetcher::getNextPosition(bool& newRow, int& row, int& column) {
 }
 
 void DlgCoverArtFetcher::slotApply(QAbstractButton* cell) {
-    if (m_track == NULL) {
+    if (m_pTrack == NULL) {
         return;
     }
 
-    QString trackPath = m_track->getDirectory();
+    QString trackPath = m_pTrack->getDirectory();
     QString newCoverLocation;
     QStringList filepaths;
     filepaths << trackPath % "/cover.jpg"
@@ -299,7 +299,7 @@ void DlgCoverArtFetcher::slotApply(QAbstractButton* cell) {
 
     bool res = false;
     if (cell->icon().pixmap(1000).save(newCoverLocation)) {
-        res = CoverArtCache::instance()->changeCoverArt(m_track->getId(),
+        res = CoverArtCache::instance()->changeCoverArt(m_pTrack->getId(),
                                                         newCoverLocation);
     }
 
