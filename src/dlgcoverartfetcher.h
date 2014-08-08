@@ -28,6 +28,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     void slotApply(QAbstractButton* cell);
     void slotClose();
     void slotSearch();
+    void slotEditingFinished();
     void slotDownloadFinished();
     void slotSearchFinished();
 

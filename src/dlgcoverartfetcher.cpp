@@ -26,6 +26,11 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
     connect(btnNext, SIGNAL(clicked()),
             this, SIGNAL(next()));
 
+    connect(txtAlbum, SIGNAL(editingFinished()),
+            this, SLOT(slotEditingFinished()));
+    connect(txtArtist, SIGNAL(editingFinished()),
+            this, SLOT(slotEditingFinished()));
+
     btnSearch->setCheckable(true);
 
     coverView->horizontalHeader()->setVisible(false);
@@ -102,6 +107,10 @@ void DlgCoverArtFetcher::abortSearch() {
     setStatus(READY);
 }
 
+void DlgCoverArtFetcher::slotEditingFinished() {
+    setStatus(READY);
+}
+
 void DlgCoverArtFetcher::slotClose() {
     abortSearch();
     close();
@@ -148,9 +157,14 @@ void DlgCoverArtFetcher::slotSearchFinished() {
         }
     }
 
+    if (m_downloadQueue.isEmpty()) {
+        setStatus(NOTFOUND);
+    } else {
+        downloadNextCover();
+    }
+
     m_pLastSearchReply->deleteLater();
     m_pLastSearchReply = NULL;
-    downloadNextCover();
 }
 
 void DlgCoverArtFetcher::parseAlbum(QXmlStreamReader& xml, QString& album,
