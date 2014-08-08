@@ -34,6 +34,7 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
     coverView->setSelectionBehavior(QAbstractItemView::SelectItems);
     coverView->setSelectionMode(QAbstractItemView::NoSelection);
     coverView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    coverView->setShowGrid(false);
 }
 
 DlgCoverArtFetcher::~DlgCoverArtFetcher() {
