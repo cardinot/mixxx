@@ -41,7 +41,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     struct SearchResult {
       QString artist;
       QString album;
-      QPixmap cover;
+      QUrl url;
     };
 
     TrackPointer m_track;
@@ -51,8 +51,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     QNetworkReply* m_pLastDownloadReply;
     QNetworkReply* m_pLastSearchReply;
 
-    QList<QUrl> m_downloadQueue;
-    QList<SearchResult> m_searchresults;
+    QList<SearchResult> m_downloadQueue;
 
     const QSize m_kCellSize;
     const QSize m_kCoverSize;
@@ -61,7 +60,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     void setStatus(Status status);
     void abortSearch();
     void downloadNextCover();
-    void showResult(SearchResult res);
+    void showResult(SearchResult res, QPixmap pixmap);
     void getNextPosition(bool& newRow, int& row, int& column);
     void parseAlbum(QXmlStreamReader& xml, QString& album,
                     QString& artist, QUrl& url) const;

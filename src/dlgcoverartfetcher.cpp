@@ -54,7 +54,6 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
 
 void DlgCoverArtFetcher::initCoverView() {
     m_downloadQueue.clear();
-    m_searchresults.clear();
     m_model = new QStandardItemModel(this);
     coverView->setModel(m_model);
     delete m_cells;
@@ -134,17 +133,15 @@ void DlgCoverArtFetcher::slotSearchFinished() {
         return;
     }
 
-    QUrl url;
     SearchResult res;
     QXmlStreamReader xml(m_pLastSearchReply->readAll());
     while(!xml.atEnd() && !xml.hasError())
     {
         xml.readNext();
         if(xml.name() == "album") {
-            parseAlbum(xml, res.album, res.artist, url);
-            if (url.isValid()) {
-                m_downloadQueue.append(url);
-                m_searchresults.append(res);
+            parseAlbum(xml, res.album, res.artist, res.url);
+            if (res.url.isValid()) {
+                m_downloadQueue.append(res);
             }
         }
     }
@@ -188,42 +185,31 @@ void DlgCoverArtFetcher::downloadNextCover() {
     }
 
     m_pLastDownloadReply = m_pNetworkManager->get(
-                QNetworkRequest(m_downloadQueue.first()));
+                QNetworkRequest(m_downloadQueue.first().url));
 
     connect(m_pLastDownloadReply, SIGNAL(finished()),
             this, SLOT(slotDownloadFinished()));
 }
 
 void DlgCoverArtFetcher::slotDownloadFinished() {
-    m_downloadQueue.removeFirst();
-
-    if (m_pLastDownloadReply->error() != QNetworkReply::NoError) {
-        m_pLastDownloadReply->deleteLater();
-        m_pLastDownloadReply = NULL;
-        m_searchresults.removeFirst();
-        downloadNextCover();
-        return;
-    }
-
-    QPixmap pixmap;
-    if (pixmap.loadFromData(m_pLastDownloadReply->readAll())) {
-        m_searchresults.first().cover = pixmap;
-        showResult(m_searchresults.first());
-        m_searchresults.move(0, m_searchresults.size() - 1);
-    } else {
-        m_searchresults.removeFirst();
+    if (m_pLastDownloadReply->error() == QNetworkReply::NoError) {
+        QPixmap pixmap;
+        if (pixmap.loadFromData(m_pLastDownloadReply->readAll())) {
+            showResult(m_downloadQueue.first(), pixmap);
+        }
     }
 
     m_pLastDownloadReply->deleteLater();
     m_pLastDownloadReply = NULL;
+    m_downloadQueue.removeFirst();
     downloadNextCover();
 }
 
-void DlgCoverArtFetcher::showResult(SearchResult res) {
+void DlgCoverArtFetcher::showResult(SearchResult res, QPixmap pixmap) {
     QToolButton* cell = new QToolButton(this);
     cell->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     cell->setAutoRaise(true);
-    cell->setIcon(res.cover);
+    cell->setIcon(pixmap);
     cell->setIconSize(m_kCoverSize);
 
     m_cells->addButton(cell);
