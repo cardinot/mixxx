@@ -45,6 +45,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     };
 
     TrackPointer m_track;
+    QButtonGroup* m_cells;
     QStandardItemModel* m_model;
     QNetworkAccessManager* m_pNetworkManager;
     QNetworkReply* m_pLastDownloadReply;
@@ -56,8 +57,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     const QSize m_kCellSize;
     const QSize m_kCoverSize;
 
-    QButtonGroup* m_cells;
-
+    void initCoverView();
     void setStatus(Status status);
     void abortSearch();
     void setStatusOfSearchBtn(bool isSearching);

@@ -7,6 +7,7 @@
 DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
         : QDialog(parent),
           m_track(NULL),
+          m_cells(NULL),
           m_model(NULL),
           m_pNetworkManager(new QNetworkAccessManager(this)),
           m_pLastDownloadReply(NULL),
@@ -33,10 +34,6 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
     coverView->setSelectionMode(QAbstractItemView::NoSelection);
     coverView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     coverView->setShowGrid(false);
-
-    m_cells = new QButtonGroup(this);
-    connect(m_cells, SIGNAL(buttonClicked(QAbstractButton*)),
-            this, SLOT(slotApply(QAbstractButton*)));
 }
 
 DlgCoverArtFetcher::~DlgCoverArtFetcher() {
@@ -45,10 +42,7 @@ DlgCoverArtFetcher::~DlgCoverArtFetcher() {
 
 void DlgCoverArtFetcher::init(const TrackPointer track) {
     abortSearch();
-    m_downloadQueue.clear();
-    m_searchresults.clear();
-    m_model = new QStandardItemModel(this);
-    coverView->setModel(m_model);
+    initCoverView();
     setStatusOfSearchBtn(false);
 
     if (track->getAlbum().isEmpty() && track->getArtist().isEmpty()) {
@@ -57,6 +51,17 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
         txtAlbum->setText(track->getAlbum());
         txtArtist->setText(track->getArtist());
     }
+}
+
+void DlgCoverArtFetcher::initCoverView() {
+    m_downloadQueue.clear();
+    m_searchresults.clear();
+    m_model = new QStandardItemModel(this);
+    coverView->setModel(m_model);
+    delete m_cells;
+    m_cells = new QButtonGroup(this);
+    connect(m_cells, SIGNAL(buttonClicked(QAbstractButton*)),
+            this, SLOT(slotApply(QAbstractButton*)));
 }
 
 void DlgCoverArtFetcher::setStatus(Status status) {
@@ -110,13 +115,7 @@ void DlgCoverArtFetcher::slotClose() {
 
 void DlgCoverArtFetcher::slotSearch() {
     if (btnSearch->isChecked()) {
-        delete m_cells;
-        m_cells = new QButtonGroup(this);
-        connect(m_cells, SIGNAL(buttonClicked(QAbstractButton*)),
-                this, SLOT(slotApply(QAbstractButton*)));
-
-        m_model = new QStandardItemModel(this);
-        coverView->setModel(m_model);
+        initCoverView();
         setStatusOfSearchBtn(true);
 
         // Last.fm
@@ -137,9 +136,6 @@ void DlgCoverArtFetcher::slotSearch() {
 }
 
 void DlgCoverArtFetcher::slotSearchFinished() {
-    m_downloadQueue.clear();
-    m_searchresults.clear();
-
     if (m_pLastSearchReply->error() != QNetworkReply::NoError) {
         m_pLastSearchReply->deleteLater();
         m_pLastSearchReply = NULL;
