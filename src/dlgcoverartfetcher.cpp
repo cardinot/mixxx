@@ -3,6 +3,7 @@
 #include <QToolButton>
 
 #include "dlgcoverartfetcher.h"
+#include "library/coverartcache.h"
 
 DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
         : QDialog(parent),
@@ -43,6 +44,7 @@ DlgCoverArtFetcher::~DlgCoverArtFetcher() {
 void DlgCoverArtFetcher::init(const TrackPointer track) {
     abortSearch();
     initCoverView();
+    m_track = track;
 
     if (track->getAlbum().isEmpty() && track->getArtist().isEmpty()) {
         txtAlbum->setText(track->getTitle());
@@ -272,7 +274,40 @@ void DlgCoverArtFetcher::getNextPosition(bool& newRow, int& row, int& column) {
     }
 }
 
-void DlgCoverArtFetcher::slotApply(QAbstractButton* i) {
-    //TODO
-    //QPixmap cover = i->icon().pixmap(1000);
+void DlgCoverArtFetcher::slotApply(QAbstractButton* cell) {
+    if (m_track == NULL) {
+        return;
+    }
+
+    QString trackPath = m_track->getDirectory();
+    QString newCoverLocation;
+    QStringList filepaths;
+    filepaths << trackPath % "/cover.jpg"
+              << trackPath % "/album.jpg"
+              << trackPath % "/mixxx-cover.jpg";
+    foreach (QString filepath, filepaths) {
+        if (!QFile::exists(filepath)) {
+            newCoverLocation = filepath;
+            break;
+        }
+    }
+    if (newCoverLocation.isEmpty()) {
+        // overwrites "mixxx-cover"
+        newCoverLocation = filepaths.last();
+        QFile::remove(newCoverLocation);
+    }
+
+    bool res = false;
+    if (cell->icon().pixmap(1000).save(newCoverLocation)) {
+        res = CoverArtCache::instance()->changeCoverArt(m_track->getId(),
+                                                        newCoverLocation);
+    }
+
+    if (!res) {
+        QMessageBox::warning(this, tr("Cover Art"),
+                             tr("Could not change the cover art!"));
+        return;
+    }
+
+    slotClose();
 }
