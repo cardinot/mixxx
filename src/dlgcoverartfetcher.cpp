@@ -8,8 +8,6 @@
 DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
         : QDialog(parent),
           m_pTrack(NULL),
-          m_pCells(NULL),
-          m_pModel(NULL),
           m_pNetworkManager(new QNetworkAccessManager(this)),
           m_pLastDownloadReply(NULL),
           m_pLastSearchReply(NULL),
@@ -32,14 +30,6 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
             this, SLOT(slotEditingFinished()));
 
     btnSearch->setCheckable(true);
-
-    coverView->horizontalHeader()->setVisible(false);
-    coverView->verticalHeader()->setVisible(false);
-    coverView->setAlternatingRowColors(false);
-    coverView->setSelectionBehavior(QAbstractItemView::SelectItems);
-    coverView->setSelectionMode(QAbstractItemView::NoSelection);
-    coverView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    coverView->setShowGrid(false);
 }
 
 DlgCoverArtFetcher::~DlgCoverArtFetcher() {
@@ -59,14 +49,23 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
     }
 }
 
+void DlgCoverArtFetcher::abortSearch() {
+    if (m_pLastSearchReply != NULL) {
+        m_pLastSearchReply->abort();
+        m_pLastSearchReply->deleteLater();
+        m_pLastSearchReply = NULL;
+    }
+    if (m_pLastDownloadReply != NULL) {
+        m_pLastDownloadReply->abort();
+        m_pLastDownloadReply->deleteLater();
+        m_pLastDownloadReply = NULL;
+    }
+    setStatus(READY);
+}
+
 void DlgCoverArtFetcher::initCoverView() {
     m_downloadQueue.clear();
-    m_pModel = new QStandardItemModel(this);
-    coverView->setModel(m_pModel);
-    delete m_pCells;
-    m_pCells = new QButtonGroup(this);
-    connect(m_pCells, SIGNAL(buttonClicked(QAbstractButton*)),
-            this, SLOT(slotApply(QAbstractButton*)));
+    coverView->clear();
 }
 
 void DlgCoverArtFetcher::setStatus(Status status) {
@@ -91,20 +90,6 @@ void DlgCoverArtFetcher::setStatus(Status status) {
     btnSearch->setChecked(!enableFields);
     txtArtist->setEnabled(enableFields);
     txtAlbum->setEnabled(enableFields);
-}
-
-void DlgCoverArtFetcher::abortSearch() {
-    if (m_pLastSearchReply != NULL) {
-        m_pLastSearchReply->abort();
-        m_pLastSearchReply->deleteLater();
-        m_pLastSearchReply = NULL;
-    }
-    if (m_pLastDownloadReply != NULL) {
-        m_pLastDownloadReply->abort();
-        m_pLastDownloadReply->deleteLater();
-        m_pLastDownloadReply = NULL;
-    }
-    setStatus(READY);
 }
 
 void DlgCoverArtFetcher::slotEditingFinished() {
@@ -211,7 +196,9 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
     if (m_pLastDownloadReply->error() == QNetworkReply::NoError) {
         QPixmap pixmap;
         if (pixmap.loadFromData(m_pLastDownloadReply->readAll())) {
-            showResult(m_downloadQueue.first(), pixmap);
+            QString title = m_downloadQueue.first().album % "\n"
+                            % m_downloadQueue.first().artist;
+            new QListWidgetItem(pixmap, title, coverView);
         }
     }
 
@@ -221,74 +208,10 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
     downloadNextCover();
 }
 
-void DlgCoverArtFetcher::showResult(SearchResult res, QPixmap pixmap) {
-    QToolButton* cell = new QToolButton(this);
-    cell->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    cell->setAutoRaise(true);
-    cell->setIcon(pixmap);
-    cell->setIconSize(m_kCoverSize);
-
-    m_pCells->addButton(cell);
-
-    res.album.truncate(16);
-    res.artist.truncate(16);
-    cell->setText(res.album % "\n" % res.artist);
-    cell->setStyleSheet("font: 7pt 'Sans Serif'");
-
-    bool newRow;
-    int row, column;
-    getNextPosition(newRow, row, column);
-
-    if (newRow) {
-        m_pModel->insertRow(row, new QStandardItem(""));
-    } else {
-        m_pModel->setItem(row, column, new QStandardItem(""));
-    }
-
-    coverView->setModel(m_pModel);
-    coverView->setColumnWidth(column, m_kCellSize.width());
-    coverView->setRowHeight(row, m_kCellSize.height());
-
-    coverView->setIndexWidget(coverView->model()->index(row, column), cell);
-}
-
-void DlgCoverArtFetcher::getNextPosition(bool& newRow, int& row, int& column) {
-    int columnCount = m_pModel->columnCount();
-    int rowCount = m_pModel->rowCount();
-    int maxColumnCount = (float) coverView->size().width() / m_kCellSize.width();
-
-    bool found = false;
-    if (columnCount * rowCount == 0) { // first result
-        newRow = true;
-        column = 0;
-        row = 0;
-        found = true;
-    }
-
-    for (int r = 0; r < rowCount && !found; r++) {
-        for (int c = 0; c < columnCount && !found; c++) {
-            if (m_pModel->data(m_pModel->index(r, c)).isNull()) {
-                newRow = false;
-                row = r;
-                column = c;
-                found = true;
-            }
-        }
-    }
-
-    if (!found) {
-        if (columnCount < maxColumnCount) {
-            m_pModel->setColumnCount(columnCount + 1);
-            getNextPosition(newRow, row, column);
-        } else {
-            newRow = true;
-            column = 0;
-            row = rowCount;
-        }
-    }
-}
-
 void DlgCoverArtFetcher::slotApply(QAbstractButton* cell) {
+    // TODO
+
+    /*
     if (m_pTrack == NULL) {
         return;
     }
@@ -324,4 +247,6 @@ void DlgCoverArtFetcher::slotApply(QAbstractButton* cell) {
     }
 
     slotClose();
+    */
 }
+

@@ -46,8 +46,6 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     };
 
     TrackPointer m_pTrack;
-    QButtonGroup* m_pCells;
-    QStandardItemModel* m_pModel;
     QNetworkAccessManager* m_pNetworkManager;
     QNetworkReply* m_pLastDownloadReply;
     QNetworkReply* m_pLastSearchReply;
