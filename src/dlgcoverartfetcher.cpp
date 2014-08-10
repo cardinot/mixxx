@@ -11,7 +11,7 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
           m_pNetworkManager(new QNetworkAccessManager(this)),
           m_pLastDownloadReply(NULL),
           m_pLastSearchReply(NULL),
-          m_kCellSize(100, 150),
+          m_kCellSize(110, 140),
           m_kCoverSize(100, 100) {
     setupUi(this);
 
@@ -30,6 +30,18 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
             this, SLOT(slotEditingFinished()));
 
     btnSearch->setCheckable(true);
+
+    coverView->setIconSize(m_kCoverSize);
+    coverView->setGridSize(m_kCellSize);
+
+    coverView->setFont(QFont("Sans Serif", 7));
+    coverView->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    coverView->setFlow(QListView::LeftToRight);
+    coverView->setWrapping(true);
+    coverView->setResizeMode(QListView::Adjust);
+    coverView->setViewMode(QListView::IconMode);
+    coverView->setUniformItemSizes(true);
+    coverView->setWordWrap(true);
 }
 
 DlgCoverArtFetcher::~DlgCoverArtFetcher() {
