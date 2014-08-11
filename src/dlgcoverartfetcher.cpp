@@ -208,8 +208,9 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
     if (m_pLastDownloadReply->error() == QNetworkReply::NoError) {
         QPixmap pixmap;
         if (pixmap.loadFromData(m_pLastDownloadReply->readAll())) {
-            QString title = m_downloadQueue.first().album % "\n"
-                            % m_downloadQueue.first().artist;
+            QString album = m_downloadQueue.first().album;
+            QString artist = m_downloadQueue.first().artist;
+            QString title = album.left(16) % "\n" % artist.left(16);
             new QListWidgetItem(pixmap, title, coverView);
         }
     }
