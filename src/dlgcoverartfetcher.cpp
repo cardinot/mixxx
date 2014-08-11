@@ -211,7 +211,8 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
             QString album = m_downloadQueue.first().album;
             QString artist = m_downloadQueue.first().artist;
             QString title = album.left(16) % "\n" % artist.left(16);
-            new QListWidgetItem(pixmap, title, coverView);
+            QListWidgetItem* cell = new QListWidgetItem(pixmap, title, coverView);
+            cell->setToolTip(album);
         }
     }
 
