@@ -31,7 +31,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     void slotApply(QListWidgetItem* item);
     void slotClose();
     void slotSearch();
-    void slotEditingFinished();
+    void slotEditing(QString);
     void slotDownloadFinished();
     void slotSearchFinished();
 

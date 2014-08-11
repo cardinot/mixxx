@@ -26,10 +26,10 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
     connect(btnNext, SIGNAL(clicked()),
             this, SIGNAL(next()));
 
-    connect(txtAlbum, SIGNAL(editingFinished()),
-            this, SLOT(slotEditingFinished()));
-    connect(txtArtist, SIGNAL(editingFinished()),
-            this, SLOT(slotEditingFinished()));
+    connect(txtAlbum, SIGNAL(textChanged(QString)),
+            this, SLOT(slotEditing(QString)));
+    connect(txtArtist, SIGNAL(textChanged(QString)),
+            this, SLOT(slotEditing(QString)));
 
     btnSearch->setCheckable(true);
 
@@ -115,7 +115,7 @@ void DlgCoverArtFetcher::setStatus(Status status, bool onlyStatusField) {
     }
 }
 
-void DlgCoverArtFetcher::slotEditingFinished() {
+void DlgCoverArtFetcher::slotEditing(QString) {
     setStatus(READY, true);
     if (coverView->currentItem() != NULL) {
         coverView->currentItem()->setSelected(false);
