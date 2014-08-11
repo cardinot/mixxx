@@ -60,6 +60,11 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
         txtAlbum->setText(track->getAlbum());
         txtArtist->setText(track->getArtist());
     }
+
+    if (!txtAlbum->text().isEmpty() || !txtArtist->text().isEmpty()) {
+        btnSearch->setChecked(true);
+        slotSearch();
+    }
 }
 
 void DlgCoverArtFetcher::abortSearch() {
