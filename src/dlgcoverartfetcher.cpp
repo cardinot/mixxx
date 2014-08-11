@@ -271,7 +271,12 @@ void DlgCoverArtFetcher::slotApply(QListWidgetItem *item) {
 }
 
 void DlgCoverArtFetcher::slotApply() {
-    if (m_pTrack == NULL) {
+    QListWidgetItem* item = coverView->currentItem();
+    if (m_pTrack == NULL && item == NULL) {
+        return;
+    }
+
+    if (!item->isSelected()) {
         return;
     }
 
