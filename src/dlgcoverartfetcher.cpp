@@ -132,10 +132,15 @@ void DlgCoverArtFetcher::slotSearch() {
     url.addQueryItem("api_key", APIKEY_LASTFM);
     m_pLastSearchReply = m_pNetworkManager->get(QNetworkRequest(url));
     connect(m_pLastSearchReply, SIGNAL(finished()),
-            this, SLOT(slotSearchFinished()));
+            this, SLOT(slotSearchFinished()), Qt::UniqueConnection);
 }
 
 void DlgCoverArtFetcher::slotSearchFinished() {
+    if (m_pLastSearchReply == NULL) {
+        setStatus(READY);
+        return;
+    }
+
     if (m_pLastSearchReply->error() != QNetworkReply::NoError) {
         abortSearch();
         return;
@@ -201,10 +206,15 @@ void DlgCoverArtFetcher::downloadNextCover() {
                 QNetworkRequest(m_downloadQueue.first().url));
 
     connect(m_pLastDownloadReply, SIGNAL(finished()),
-            this, SLOT(slotDownloadFinished()));
+            this, SLOT(slotDownloadFinished()), Qt::UniqueConnection);
 }
 
 void DlgCoverArtFetcher::slotDownloadFinished() {
+    if (m_downloadQueue.isEmpty() || m_pLastDownloadReply == NULL) {
+        setStatus(READY);
+        return;
+    }
+
     if (m_pLastDownloadReply->error() == QNetworkReply::NoError) {
         QPixmap pixmap;
         if (pixmap.loadFromData(m_pLastDownloadReply->readAll())) {
