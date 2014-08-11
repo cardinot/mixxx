@@ -117,6 +117,9 @@ void DlgCoverArtFetcher::setStatus(Status status, bool onlyStatusField) {
 
 void DlgCoverArtFetcher::slotEditingFinished() {
     setStatus(READY, true);
+    if (coverView->currentItem() != NULL) {
+        coverView->currentItem()->setSelected(false);
+    }
 }
 
 void DlgCoverArtFetcher::slotClose() {
