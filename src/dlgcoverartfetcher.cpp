@@ -71,6 +71,8 @@ void DlgCoverArtFetcher::init(const TrackPointer track) {
     if (!txtAlbum->text().isEmpty() || !txtArtist->text().isEmpty()) {
         btnSearch->setChecked(true);
         slotSearch();
+    } else {
+        setStatus(READY);
     }
 }
 
@@ -85,24 +87,28 @@ void DlgCoverArtFetcher::abortSearch() {
         m_pLastDownloadReply->deleteLater();
         m_pLastDownloadReply = NULL;
     }
-    setStatus(READY);
 }
 
-void DlgCoverArtFetcher::setStatus(Status status, bool onlyStatusField) {
+void DlgCoverArtFetcher::setStatus(Status status,
+                                   bool onlyStatusField,
+                                   QString specificMsg) {
     QString statusText;
     QString btnText = tr("Search");
     bool enableFields = true;
     switch (status) {
         case READY:
-            statusText = tr("ready!");
+            statusText = tr("Ready!");
             break;
         case NOTFOUND:
             statusText = tr("No images were found!");
             break;
         case SEARCHING:
-            statusText = tr("searching...");
+            statusText = tr("Searching...");
             btnText = tr("Abort");
             enableFields = false;
+            break;
+        case NETWORKERROR:
+            statusText = tr("Network Error! ") % specificMsg;
             break;
     }
     txtStatus->setText(statusText);
@@ -148,6 +154,7 @@ void DlgCoverArtFetcher::keyPressEvent(QKeyEvent* event) {
 void DlgCoverArtFetcher::slotSearch() {
     if (!btnSearch->isChecked()) {
         abortSearch();
+        setStatus(READY);
         return;
     }
 
@@ -175,6 +182,7 @@ void DlgCoverArtFetcher::slotSearchFinished() {
     }
 
     if (m_pLastSearchReply->error() != QNetworkReply::NoError) {
+        setStatus(NETWORKERROR, true, m_pLastSearchReply->errorString());
         abortSearch();
         return;
     }
@@ -257,6 +265,8 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
             QListWidgetItem* cell = new QListWidgetItem(pixmap, title, coverView);
             cell->setToolTip(album);
         }
+    } else {
+        setStatus(NETWORKERROR, true, m_pLastDownloadReply->errorString());
     }
 
     m_pLastDownloadReply->deleteLater();

@@ -39,7 +39,8 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     enum Status {
         READY,
         NOTFOUND,
-        SEARCHING
+        SEARCHING,
+        NETWORKERROR
     };
 
     struct SearchResult {
@@ -58,7 +59,9 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     const QSize m_kCellSize;
     const QSize m_kCoverSize;
 
-    void setStatus(Status status, bool onlyStatusField=false);
+    void setStatus(Status status,
+                   bool onlyStatusField = false,
+                   QString specificMsg = "");
     void abortSearch();
     void downloadNextCover();
     void showResult(SearchResult res, QPixmap pixmap);
