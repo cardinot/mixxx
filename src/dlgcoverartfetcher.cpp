@@ -124,6 +124,24 @@ void DlgCoverArtFetcher::slotClose() {
     close();
 }
 
+void DlgCoverArtFetcher::keyPressEvent(QKeyEvent* event) {
+    if (event->key() != Qt::Key_Enter && event->key() != Qt::Key_Return) {
+        return;
+    }
+
+    // ENTER key was pressed:
+    // a cover is selected ? apply()
+    // it is ready to search ? search()
+    // it is searching ? abort()
+    if (coverView->currentItem() != NULL) {
+        slotApply();
+        return;
+    } else if (!btnSearch->isChecked()) {
+        btnSearch->setChecked(true);
+    }
+    slotSearch();
+}
+
 void DlgCoverArtFetcher::slotSearch() {
     if (!btnSearch->isChecked()) {
         abortSearch();

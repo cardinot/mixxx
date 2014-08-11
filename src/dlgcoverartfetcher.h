@@ -3,6 +3,7 @@
 
 #include <QButtonGroup>
 #include <QDialog>
+#include <QKeyEvent>
 #include <QNetworkReply>
 #include <QStandardItemModel>
 #include <QXmlStreamReader>
@@ -19,6 +20,7 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     virtual ~DlgCoverArtFetcher();
 
     void init(const TrackPointer track);
+    void keyPressEvent(QKeyEvent* event);
 
   signals:
     void next();
