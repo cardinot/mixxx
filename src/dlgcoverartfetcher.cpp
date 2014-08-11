@@ -19,6 +19,8 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
             this, SLOT(slotSearch()));
     connect(btnClose, SIGNAL(clicked()),
             this, SLOT(slotClose()));
+    connect(btnApply, SIGNAL(clicked()),
+            this, SLOT(slotApply()));
     connect(btnPrev, SIGNAL(clicked()),
             this, SIGNAL(previous()));
     connect(btnNext, SIGNAL(clicked()),
@@ -237,10 +239,7 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
     downloadNextCover();
 }
 
-void DlgCoverArtFetcher::slotApply(QAbstractButton* cell) {
-    // TODO
-
-    /*
+void DlgCoverArtFetcher::slotApply() {
     if (m_pTrack == NULL) {
         return;
     }
@@ -264,7 +263,7 @@ void DlgCoverArtFetcher::slotApply(QAbstractButton* cell) {
     }
 
     bool res = false;
-    if (cell->icon().pixmap(1000).save(newCoverLocation)) {
+    if (coverView->currentItem()->icon().pixmap(1000).save(newCoverLocation)) {
         res = CoverArtCache::instance()->changeCoverArt(m_pTrack->getId(),
                                                         newCoverLocation);
     }
@@ -276,6 +275,4 @@ void DlgCoverArtFetcher::slotApply(QAbstractButton* cell) {
     }
 
     slotClose();
-    */
 }
-
