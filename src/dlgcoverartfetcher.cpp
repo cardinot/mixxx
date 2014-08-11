@@ -44,6 +44,9 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
     coverView->setViewMode(QListView::IconMode);
     coverView->setUniformItemSizes(true);
     coverView->setWordWrap(true);
+
+    connect(coverView, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
+            this, SLOT(slotApply(QListWidgetItem*)));
 }
 
 DlgCoverArtFetcher::~DlgCoverArtFetcher() {
@@ -237,6 +240,11 @@ void DlgCoverArtFetcher::slotDownloadFinished() {
     m_pLastDownloadReply = NULL;
     m_downloadQueue.removeFirst();
     downloadNextCover();
+}
+
+void DlgCoverArtFetcher::slotApply(QListWidgetItem *item) {
+    Q_UNUSED(item);
+    slotApply();
 }
 
 void DlgCoverArtFetcher::slotApply() {
