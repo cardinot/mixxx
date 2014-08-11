@@ -44,6 +44,8 @@ DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
     coverView->setViewMode(QListView::IconMode);
     coverView->setUniformItemSizes(true);
     coverView->setWordWrap(true);
+    coverView->setAcceptDrops(false);
+    coverView->setDragDropMode(QAbstractItemView::NoDragDrop);
 
     connect(coverView, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
             this, SLOT(slotApply(QListWidgetItem*)));
