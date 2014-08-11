@@ -80,7 +80,7 @@ void DlgCoverArtFetcher::initCoverView() {
     coverView->clear();
 }
 
-void DlgCoverArtFetcher::setStatus(Status status) {
+void DlgCoverArtFetcher::setStatus(Status status, bool onlyStatusField) {
     QString statusText;
     QString btnText = tr("Search");
     bool enableFields = true;
@@ -98,14 +98,17 @@ void DlgCoverArtFetcher::setStatus(Status status) {
             break;
     }
     txtStatus->setText(statusText);
-    btnSearch->setText(btnText);
-    btnSearch->setChecked(!enableFields);
-    txtArtist->setEnabled(enableFields);
-    txtAlbum->setEnabled(enableFields);
+    if (!onlyStatusField)
+    {
+        btnSearch->setText(btnText);
+        btnSearch->setChecked(!enableFields);
+        txtArtist->setEnabled(enableFields);
+        txtAlbum->setEnabled(enableFields);
+    }
 }
 
 void DlgCoverArtFetcher::slotEditingFinished() {
-    setStatus(READY);
+    setStatus(READY, true);
 }
 
 void DlgCoverArtFetcher::slotClose() {
