@@ -55,7 +55,6 @@ class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
     const QSize m_kCellSize;
     const QSize m_kCoverSize;
 
-    void initCoverView();
     void setStatus(Status status, bool onlyStatusField=false);
     void abortSearch();
     void downloadNextCover();

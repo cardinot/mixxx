@@ -50,7 +50,8 @@ DlgCoverArtFetcher::~DlgCoverArtFetcher() {
 
 void DlgCoverArtFetcher::init(const TrackPointer track) {
     abortSearch();
-    initCoverView();
+    m_downloadQueue.clear();
+    coverView->clear();
     m_pTrack = track;
 
     if (track->getAlbum().isEmpty() && track->getArtist().isEmpty()) {
@@ -73,11 +74,6 @@ void DlgCoverArtFetcher::abortSearch() {
         m_pLastDownloadReply = NULL;
     }
     setStatus(READY);
-}
-
-void DlgCoverArtFetcher::initCoverView() {
-    m_downloadQueue.clear();
-    coverView->clear();
 }
 
 void DlgCoverArtFetcher::setStatus(Status status, bool onlyStatusField) {
@@ -122,7 +118,8 @@ void DlgCoverArtFetcher::slotSearch() {
         return;
     }
 
-    initCoverView();
+    m_downloadQueue.clear();
+    coverView->clear();
     setStatus(SEARCHING);
 
     // Last.fm
