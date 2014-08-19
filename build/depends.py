@@ -563,6 +563,7 @@ class MixxxCore(Feature):
                    "dlghidden.cpp",
                    "dlgmissing.cpp",
                    "dlgdevelopertools.cpp",
+                   "dlgcoverartfullsize.cpp",
 
                    "effects/effectmanifest.cpp",
                    "effects/effectmanifestparameter.cpp",
@@ -721,6 +722,7 @@ class MixxxCore(Feature):
                    "widget/wcombobox.cpp",
                    "widget/wsplitter.cpp",
                    "widget/wcoverart.cpp",
+                   "widget/wcoverartmenu.cpp",
 
                    "network.cpp",
                    "musicbrainz/tagfetcher.cpp",
@@ -954,6 +956,7 @@ class MixxxCore(Feature):
             'dlgaboutdlg.ui',
             'dlganalysis.ui',
             'dlgautodj.ui',
+            'dlgcoverartfullsize.ui',
             'dlgdevelopertoolsdlg.ui',
             'dlghidden.ui',
             'dlgmissing.ui',

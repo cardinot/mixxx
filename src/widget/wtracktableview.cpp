@@ -148,8 +148,9 @@ WTrackTableView::~WTrackTableView() {
 
 void WTrackTableView::slotScrollValueChanged(int) {
     if (m_bLastCoverLoaded) {
-        // not draw covers in the tableview (cover_art column)
-        emit(lockCoverArtDelegate(true));
+        // don't try to load and search covers, drawing only
+        // covers which are already in the QPixmapCache.
+        emit(onlyCachedCoverArt(true));
     }
     m_bLastCoverLoaded = false;
     m_lastSelection = m_pCOTGuiTickTime->get();
@@ -163,8 +164,9 @@ void WTrackTableView::selectionChanged(const QItemSelection &selected,
     if (m_bLastCoverLoaded) {
         // load default cover art
         emit(loadCoverArt("", "", 0));
-        // not draw covers in the tableview (cover_art column)
-        emit(lockCoverArtDelegate(true));
+        // don't try to load and search covers, drawing only
+        // covers which are already in the QPixmapCache.
+        emit(onlyCachedCoverArt(true));
     }
     m_bLastCoverLoaded = false;
     m_lastSelection = m_pCOTGuiTickTime->get();
@@ -172,10 +174,10 @@ void WTrackTableView::selectionChanged(const QItemSelection &selected,
 }
 
 void WTrackTableView::slotGuiTickTime(double cpuTime) {
-    // if the user is stoped in the same row for more than 0.1s,
+    // if the user is stoped in the same row for more than 0.05s,
     // we load the cover art once.
     if (!m_bLastCoverLoaded) {
-        if (cpuTime >= m_lastSelection + 0.1) {
+        if (cpuTime >= m_lastSelection + 0.05) {
             slotLoadCoverArt();
             m_bLastCoverLoaded = true;
         }
@@ -202,7 +204,8 @@ void WTrackTableView::slotLoadCoverArt() {
         }
     }
     emit(loadCoverArt(coverLocation, md5Hash, trackId));
-    emit(lockCoverArtDelegate(false));
+    // it will allows CoverCache to load and search covers normally
+    emit(onlyCachedCoverArt(false));
     update();
 }
 
@@ -625,16 +628,13 @@ void WTrackTableView::showTrackInfo(QModelIndex index) {
     }
 
     TrackPointer pTrack = trackModel->getTrack(index);
-    // NULL is fine.
-    m_pTrackInfo->loadTrack(pTrack);
-    currentTrackInfoIndex = index;
-
     QString coverLocation = index.sibling(index.row(),
         trackModel->fieldIndex(LIBRARYTABLE_COVERART_LOCATION)).data().toString();
     QString md5Hash = index.sibling(index.row(),
         trackModel->fieldIndex(LIBRARYTABLE_COVERART_MD5)).data().toString();
-    int trackId = trackModel->getTrackId(index);
-    m_pTrackInfo->slotLoadCoverArt(coverLocation, md5Hash, trackId);
+
+    m_pTrackInfo->loadTrack(pTrack, coverLocation, md5Hash); // NULL is fine.
+    currentTrackInfoIndex = index;
 
     m_pTrackInfo->show();
 }
