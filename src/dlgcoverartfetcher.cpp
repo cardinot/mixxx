@@ -5,9 +5,8 @@
 #include "dlgcoverartfetcher.h"
 #include "library/coverartcache.h"
 
-DlgCoverArtFetcher::DlgCoverArtFetcher(QWidget *parent)
-        : QDialog(parent),
-          m_pTrack(NULL),
+DlgCoverArtFetcher::DlgCoverArtFetcher()
+        : m_pTrack(NULL),
           m_pNetworkManager(new QNetworkAccessManager(this)),
           m_pLastDownloadReply(NULL),
           m_pLastSearchReply(NULL),

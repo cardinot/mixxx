@@ -7,10 +7,9 @@
 #include <QHash>
 #include <QList>
 
-#include "ui_dlgtrackinfo.h"
-#include "dlgcoverartfetcher.h"
 #include "dlgtagfetcher.h"
 #include "trackinfoobject.h"
+#include "ui_dlgtrackinfo.h"
 #include "util/types.h"
 #include "widget/wcoverartmenu.h"
 
@@ -21,9 +20,7 @@ class Cue;
 class DlgTrackInfo : public QDialog, public Ui::DlgTrackInfo {
     Q_OBJECT
   public:
-    DlgTrackInfo(QWidget* parent,
-                 DlgTagFetcher& DlgTagFetcher,
-                 DlgCoverArtFetcher& DlgCoverArtFetcher);
+    DlgTrackInfo(QWidget* parent, DlgTagFetcher& DlgTagFetcher);
     virtual ~DlgTrackInfo();
 
   public slots:
@@ -45,7 +42,6 @@ class DlgTrackInfo : public QDialog, public Ui::DlgTrackInfo {
     void apply();
     void cancel();
     void trackUpdated();
-    void fetchCover();
     void fetchTag();
 
     void cueActivate();
@@ -79,7 +75,6 @@ class DlgTrackInfo : public QDialog, public Ui::DlgTrackInfo {
     CSAMPLE m_bpmTapFilter[kFilterLength];
     QTime m_bpmTapTimer;
 
-    DlgCoverArtFetcher& m_DlgCoverArtFetcher;
     DlgTagFetcher& m_DlgTagFetcher;
 
     WCoverArtMenu* m_pCoverMenu;

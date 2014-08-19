@@ -28,14 +28,13 @@ WTrackTableView::WTrackTableView(QWidget * parent,
                                       WTRACKTABLEVIEW_VSCROLLBARPOS_KEY)),
           m_pConfig(pConfig),
           m_pTrackCollection(pTrackCollection),
-          m_DlgCoverArtFetcher(NULL),
           m_DlgTagFetcher(NULL),
           m_sorting(sorting),
           m_iCoverLocationColumn(-1),
           m_iMd5Column(-1) {
     // Give a NULL parent because otherwise it inherits our style which can make
     // it unreadable. Bug #673411
-    m_pTrackInfo = new DlgTrackInfo(NULL, m_DlgTagFetcher, m_DlgCoverArtFetcher);
+    m_pTrackInfo = new DlgTrackInfo(NULL, m_DlgTagFetcher);
     connect(m_pTrackInfo, SIGNAL(next()),
             this, SLOT(slotNextTrack()));
     connect(m_pTrackInfo, SIGNAL(previous()),
@@ -44,9 +43,9 @@ WTrackTableView::WTrackTableView(QWidget * parent,
             this, SLOT(slotNextTrack()));
     connect(&m_DlgTagFetcher, SIGNAL(previous()),
             this, SLOT(slotPrevTrack()));
-    connect(&m_DlgCoverArtFetcher, SIGNAL(next()),
+    connect(DlgCoverArtFetcher::instance(), SIGNAL(next()),
             this, SLOT(slotNextTrack()));
-    connect(&m_DlgCoverArtFetcher, SIGNAL(previous()),
+    connect(DlgCoverArtFetcher::instance(), SIGNAL(previous()),
             this, SLOT(slotPrevTrack()));
 
     connect(&m_loadTrackMapper, SIGNAL(mapped(QString)),
@@ -612,7 +611,7 @@ void WTrackTableView::updateDlgs(const QModelIndex& row) {
     if (m_pTrackInfo->isVisible()) {
         showTrackInfo(row);
     }
-    if (m_DlgCoverArtFetcher.isVisible()) {
+    if (DlgCoverArtFetcher::instance()->isVisible()) {
         showDlgCoverArtFetcher(row);
     }
     if (m_DlgTagFetcher.isVisible()) {
@@ -648,9 +647,9 @@ void WTrackTableView::showDlgCoverArtFetcher(QModelIndex index) {
 
     TrackPointer pTrack = trackModel->getTrack(index);
     // NULL is fine
-    m_DlgCoverArtFetcher.init(pTrack);
+    DlgCoverArtFetcher::instance()->init(pTrack);
     currentTrackInfoIndex = index;
-    m_DlgCoverArtFetcher.show();
+    DlgCoverArtFetcher::instance()->show();
 }
 
 void WTrackTableView::showDlgTagFetcher(QModelIndex index) {

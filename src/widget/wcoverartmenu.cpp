@@ -2,6 +2,7 @@
 #include <QIcon>
 #include <QStringBuilder>
 
+#include "dlgcoverartfetcher.h"
 #include "dlgcoverartfullsize.h"
 #include "wcoverartmenu.h"
 #include "library/coverartcache.h"
@@ -17,6 +18,7 @@ WCoverArtMenu::~WCoverArtMenu() {
     delete m_pChange;
     delete m_pFullSize;
     delete m_pReload;
+    delete m_pSearch;
     delete m_pUnset;
 }
 
@@ -38,7 +40,7 @@ void WCoverArtMenu::createActions() {
     connect(m_pFullSize, SIGNAL(triggered()), this, SLOT(slotShowFullSize()));
 
     context = (char*) "unset cover art - load default";
-    title = (char*) "Unset cover";
+    title = (char*) "&Unset cover";
     iconPath = (":/images/library/ic_cover_unset.png");
     m_pUnset = new QAction(QIcon(iconPath), tr(title, context), this);
     connect(m_pUnset, SIGNAL(triggered()), this, SLOT(slotUnset()));
@@ -48,9 +50,16 @@ void WCoverArtMenu::createActions() {
     iconPath = (":/images/library/ic_cover_reload.png");
     m_pReload = new QAction(QIcon(iconPath), tr(title, context), this);
     connect(m_pReload, SIGNAL(triggered()), this, SLOT(slotReload()));
+
+    context = (char*) "search cover art from the internet";
+    title = (char*) "&Search";
+    iconPath = (":/images/library/ic_cover_search.png");
+    m_pSearch = new QAction(QIcon(iconPath), tr(title, context), this);
+    connect(m_pSearch, SIGNAL(triggered()), this, SLOT(slotSearch()));
 }
 
 void WCoverArtMenu::addActions() {
+    addAction(m_pSearch);
     addAction(m_pChange);
     addAction(m_pUnset);
     addAction(m_pReload);
@@ -176,4 +185,20 @@ void WCoverArtMenu::slotUnset() {
     }
     emit(coverLocationUpdated(newLoc, m_sCoverLocation));
     m_sCoverLocation = newLoc;
+}
+
+void WCoverArtMenu::slotSearch() {
+    if (m_iTrackId < 1) {
+        return;
+    }
+
+    if (!m_pTrack) {
+        m_pTrack = CoverArtCache::instance()->getTrack(m_iTrackId);
+        if (!m_pTrack) {
+            return;
+        }
+    }
+
+    DlgCoverArtFetcher::instance()->init(m_pTrack);
+    DlgCoverArtFetcher::instance()->show();
 }

@@ -10,21 +10,28 @@
 
 #include "trackinfoobject.h"
 #include "ui_dlgcoverartfetcher.h"
+#include "util/singleton.h"
 
 const QString APIKEY_LASTFM = "0082384c4beaad1f558827183cdc001f";
 
-class DlgCoverArtFetcher : public QDialog, public Ui::DlgCoverArtFetcher {
+class DlgCoverArtFetcher
+        : public QDialog,
+          public Ui::DlgCoverArtFetcher,
+          public Singleton<DlgCoverArtFetcher>
+{
     Q_OBJECT
   public:
-    DlgCoverArtFetcher(QWidget *parent);
-    virtual ~DlgCoverArtFetcher();
-
     void init(const TrackPointer track);
     void keyPressEvent(QKeyEvent* event);
 
   signals:
     void next();
     void previous();
+
+  protected:
+    DlgCoverArtFetcher();
+    virtual ~DlgCoverArtFetcher();
+    friend class Singleton<DlgCoverArtFetcher>;
 
   private slots:
     void slotApply();

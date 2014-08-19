@@ -102,7 +102,6 @@ class WTrackTableView : public WLibraryTableView {
     QSignalMapper m_loadTrackMapper;
 
     DlgTrackInfo* m_pTrackInfo;
-    DlgCoverArtFetcher m_DlgCoverArtFetcher;
     DlgTagFetcher m_DlgTagFetcher;
     QModelIndex currentTrackInfoIndex;
 

@@ -16,12 +16,9 @@ const int kMaxBPM = 240;
 // minBPM)
 const int kMaxInterval = static_cast<int>(1000.0 * (60.0 / kMinBPM));
 
-DlgTrackInfo::DlgTrackInfo(QWidget* parent,
-                           DlgTagFetcher& DlgTagFetcher,
-                           DlgCoverArtFetcher& DlgCoverArtFetcher)
+DlgTrackInfo::DlgTrackInfo(QWidget* parent, DlgTagFetcher& DlgTagFetcher)
             : QDialog(parent),
               m_pLoadedTrack(NULL),
-              m_DlgCoverArtFetcher(DlgCoverArtFetcher),
               m_DlgTagFetcher(DlgTagFetcher),
               m_pCoverMenu(new WCoverArtMenu(this)) {
     init();
@@ -466,11 +463,6 @@ void DlgTrackInfo::reloadTrackMetadata() {
                                                 m_pLoadedTrack->getSecurityToken()));
         populateFields(pTrack);
     }
-}
-
-void DlgTrackInfo::fetchCover() {
-    m_DlgCoverArtFetcher.init(m_pLoadedTrack);
-    m_DlgCoverArtFetcher.show();
 }
 
 void DlgTrackInfo::fetchTag() {
